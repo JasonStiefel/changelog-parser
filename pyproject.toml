@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "py-changelog"
+version = "0.0.0"
+description = "Parses and handles changelog files"
+requires-python = ">=3.8"
+dependencies = [
+  "semver"
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest",
+  "pytest-xdist"
+]
+
+[tool.pytest.ini_options]
+log_cli_level = "info"
+testpaths = [ "test" ]
+
+[tool.setuptools.package-dir]
+changelog = "src"
+changelog_test = "test"
+
+[tool.setuptools.package-data]
+profile_service = [
+  "*.ini"
+]
