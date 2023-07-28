@@ -3,7 +3,7 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "py-changelog"
+name = "changelog-parser"
 version = "0.0.0"
 description = "Parses and handles changelog files"
 readme = "README.md"
@@ -24,8 +24,8 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-urls.homepage = "https://github.com/pypa/py-changelog"
-urls.changelog = "https://github.com/JasonStiefel/py-changelog/blob/main/CHANGELOG.md"
+urls.homepage = "https://github.com/pypa/changelog-parser"
+urls.changelog = "https://github.com/JasonStiefel/changelog-parser/blob/main/CHANGELOG.md"
 
 dependencies = [
   "semver"
