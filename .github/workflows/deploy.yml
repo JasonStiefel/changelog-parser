@@ -1,0 +1,17 @@
+on:
+  push:
+    branches: main
+
+jobs:
+  Build-and-Test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - run: python3 -m pip install build --user
+    - run: python3 -m build --sdist --wheel --outdir dist/
+    - uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}

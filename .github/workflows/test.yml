@@ -1,0 +1,13 @@
+name: Run Pytest
+on: pull_request_target
+
+jobs:
+  Build-and-Test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - run: pip install .[test]
+    - run: pytest -n auto
