@@ -37,7 +37,7 @@ Yet another python changelog parser.
            "type": "datetime.date",
            "description": "Python object from https://docs.python.org/3/library/datetime.html#date-objects; parsed using \"fromisoformat\""
          } ]
-       }
+       },
        "yanked": {
          "type": "boolean"
        },
@@ -47,7 +47,10 @@ Yet another python changelog parser.
        "removed": { "$ref": "#/$defs/change_list" },
        "fixed": { "$ref": "#/$defs/change_list" },
        "security": { "$ref": "#/$defs/change_list" },
-       "compare_url": { "type": "string" }
+       "compare_url": {
+         "type": "string",
+         "pattern": "^https?:\\/\\/.+"
+       }
      },
      "required": [ "version", "date", "yanked" ],
      "additionalProperties": false,

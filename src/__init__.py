@@ -1,8 +1,12 @@
+# SPDX-License-Identifier: MIT
+
+__version__ = '0.0.0'
+
 import re
 from datetime import date
 from semver import Version
-from typing import Optional, Any
-from io import StringIO
+from typing import ( Optional, Any )
+from io import ( IOBase, StringIO )
 
 class ChangelogParsingError(Exception):
     @property
@@ -11,18 +15,18 @@ class ChangelogParsingError(Exception):
             return int( match.group( 1 ) )
 
     @property
-    def col_no( self )-> Optional[ int ]:
+    def column_no( self )-> Optional[ int ]:
         if ( match := re.search( r' \(at (?:line \d+, )?column (\d+)\)$', str( self ) ) ):
             return int( match.group( 1 ) )
 
-    def __init__( self, msg: str, line_no: Optional[ int ] = None, col_no: Optional[ int ] = None ):
+    def __init__( self, msg: str, line_no: Optional[ int ] = None, column_no: Optional[ int ] = None ):
         specifications = (
             *( ( f'line { line_no }', ) if isinstance( line_no, int ) else () ),
-            *( ( f'column { col_no }', ) if isinstance( col_no, int ) else () )
+            *( ( f'column { column_no }', ) if isinstance( column_no, int ) else () )
         )
         super().__init__( msg + ( f' (at { ", ".join( specifications ) })' if specifications else '' ) )
 
-def load( fp, encoding: str = 'utf-8' )-> dict[ str, Any ]:
+def load( fp: IOBase, encoding: str = 'utf-8' )-> dict[ str, Any ]:
     line_no, changes, section, in_compare_urls = 0, [], None, False
 
     while ( line := fp.readline() ):
@@ -48,10 +52,14 @@ def load( fp, encoding: str = 'utf-8' )-> dict[ str, Any ]:
                     changes[ -1 ][ section ][ -1 ] = changes[ -1 ][ section ][ -1 ].rstrip()
                 section = None
 
-            changes.append( {} )
+            changes.append( { "date": None,  } )
 
             if line.rstrip() != line:
-                raise ChangelogParsingError( "Extra spaces at end of line", line_no, len( line.rstrip() ) )
+                raise ChangelogParsingError(
+                    msg = "Extra space(s) at end of line",
+                    line_no = line_no,
+                    column_no = len( line.rstrip() ) + 1
+                )
             if line.endswith( " [YANKED]" ):
                 changes[ -1 ][ "yanked" ] = True
                 line = line.removesuffix( " [YANKED]" )
@@ -59,10 +67,10 @@ def load( fp, encoding: str = 'utf-8' )-> dict[ str, Any ]:
                 changes[ -1 ][ "yanked" ] = False
 
             if line.rstrip() != line:
-                raise ChangelogParsingError( "Extra spaces after date", line_no, len( line.rstrip() ) )
+                raise ChangelogParsingError( "Extra space(s) after date", line_no, len( line.rstrip() ) + 1 )
             line, sep, change_date = line.partition( ' - ' )
             if change_date.lstrip() != change_date:
-                raise ChangelogParsingError( "Extra spaces before date", line_no, len( line + sep ) )
+                raise ChangelogParsingError( "Extra space(s) before date", line_no, len( line + sep ) + 1 )
             if sep:
                 try:
                     changes[ -1 ][ "date" ] = date.fromisoformat( change_date )
@@ -70,20 +78,24 @@ def load( fp, encoding: str = 'utf-8' )-> dict[ str, Any ]:
                     raise ChangelogParsingError(
                         msg = f'Unable to parse changelog entry date, "{ change_date }"; { e }',
                         line_no = line_no,
-                        col_no = len( line )
+                        column_no = len( line + sep ) + 1
                     )
 
             if line.rstrip() != line:
-                raise ChangelogParsingError( "Extra spaces after version", line_no, len( line.rstrip() ) )
+                raise ChangelogParsingError(
+                    msg = "Extra space(s) after version",
+                    line_no = line_no,
+                    column_no = len( line.rstrip() ) + 1
+                )
             line = line.removeprefix( "## " )
             if line.lstrip() != line:
-                raise ChangelogParsingError( "Extra spaces before version", line_no, 4 )
+                raise ChangelogParsingError( "Extra space(s) before version", line_no, 4 )
 
             if not line.startswith( "[" ) or not line.endswith( "]" ):
                 raise ChangelogParsingError(
                     msg = 'Version must be enclosed with square brackets',
                     line_no = line_no,
-                    col_no = 4 if not line.startswith( "[" ) else 4 + len( line )
+                    column_no = 4 if not line.startswith( "[" ) else 4 + len( line )
                 )
             line = line.removeprefix( "[" ).removesuffix( "]" )
             try:
@@ -123,7 +135,7 @@ def load( fp, encoding: str = 'utf-8' )-> dict[ str, Any ]:
                     raise ChangelogParsingError(
                         msg = f'Failed parsing semver version, "{ match.group( 1 ) }"; { e }',
                         line_no = line_no,
-                        col_no = 2
+                        column_no = 2
                     )
 
             for change in changes:
@@ -137,9 +149,9 @@ def load( fp, encoding: str = 'utf-8' )-> dict[ str, Any ]:
                 raise ChangelogParsingError(
                     msg = f'No corresponding record for compare url with version, "{ match.group( 1 ) }"',
                     line_no = line_no,
-                    col_no = 2
+                    column_no = 2
                 )
-                
+
             change[ "compare_url" ] = match.group( 2 )
             in_compare_urls = True
 
