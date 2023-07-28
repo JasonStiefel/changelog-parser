@@ -1,4 +1,4 @@
-# py-changelog
+# changelog-parser
 Yet another python changelog parser.
 * Loads data from a [`CHANGELOG.md` file](https://keepachangelog.com/en/1.1.0/) using code like:
    ```python
