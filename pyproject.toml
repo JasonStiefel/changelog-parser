@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "changelog-parser"
 version = "0.0.0"
-description = "Parses and handles changelog files"
+description = "Parses changelog files"
 readme = "README.md"
 requires-python = ">= 3.8"
 license.file = "LICENSE"
 authors = [
-  { name = "Jason Stiefe", email = "Jason.R.Stiefel@gmail.com" }
+  { name = "Jason Stiefel", email = "Jason.R.Stiefel@gmail.com" }
 ]
 classifiers = [
   "License :: OSI Approved :: MIT License",
@@ -24,7 +24,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-urls.homepage = "https://github.com/pypa/changelog-parser"
+urls.homepage = "https://github.com/JasonStiefel/changelog-parser"
 urls.changelog = "https://github.com/JasonStiefel/changelog-parser/blob/main/CHANGELOG.md"
 
 dependencies = [
