@@ -6,7 +6,27 @@ build-backend = "setuptools.build_meta"
 name = "py-changelog"
 version = "0.0.0"
 description = "Parses and handles changelog files"
-requires-python = ">=3.8"
+readme = "README.md"
+requires-python = ">= 3.8"
+license.file = "LICENSE"
+authors = [
+  { name = "Jason Stiefe", email = "Jason.R.Stiefel@gmail.com" }
+]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+urls.homepage = "https://github.com/pypa/py-changelog"
+urls.changelog = "https://github.com/JasonStiefel/py-changelog/blob/main/CHANGELOG.md"
+
 dependencies = [
   "semver"
 ]
@@ -23,7 +43,6 @@ testpaths = [ "test" ]
 
 [tool.setuptools.package-dir]
 changelog = "src"
-changelog_test = "test"
 
 [tool.setuptools.package-data]
 profile_service = [
