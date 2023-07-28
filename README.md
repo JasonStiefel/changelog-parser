@@ -4,14 +4,14 @@ Yet another python changelog parser.
    ```python
    import changelog
 
-   with open( "CHANGELOG.md" 'rb' ) as fp:
+   with open( "CHANGELOG.md", 'rb' ) as fp:
      changes = changelog.load( fp )
    ```
    or
    ```python
    import changelog
 
-   with open( "CHANGELOG.md" 'r' ) as fp:
+   with open( "CHANGELOG.md", 'r' ) as fp:
      changes = changelog.loads( fp.read() )
    ```
 * Returns it in the following schema (some types are Python objects and not valid JSON schema):
