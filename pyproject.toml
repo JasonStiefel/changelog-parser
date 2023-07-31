@@ -32,7 +32,7 @@ dependencies = [
 ]
 
 [tool.setuptools.dynamic]
-version.attr = "" = { attr = "changelog.__version__" }
+version.att = "changelog.__version__"
 
 [project.optional-dependencies]
 test = [
