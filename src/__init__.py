@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 
-__version__ = '0.0.0'
+__version__ = '0.0.2'
 
 import re
 from datetime import date
@@ -10,19 +10,19 @@ from io import ( IOBase, StringIO )
 
 class ChangelogParsingError(Exception):
     @property
-    def line_no( self )-> Optional[ int ]:
+    def line_number( self )-> Optional[ int ]:
         if ( match := re.search( r' \(at line (\d+)(?:, column \d+)?\)$', str( self ) ) ):
             return int( match.group( 1 ) )
 
     @property
-    def column_no( self )-> Optional[ int ]:
+    def column_number( self )-> Optional[ int ]:
         if ( match := re.search( r' \(at (?:line \d+, )?column (\d+)\)$', str( self ) ) ):
             return int( match.group( 1 ) )
 
-    def __init__( self, msg: str, line_no: Optional[ int ] = None, column_no: Optional[ int ] = None ):
+    def __init__( self, msg: str, line_number: Optional[ int ] = None, column_number: Optional[ int ] = None ):
         specifications = (
-            *( ( f'line { line_no }', ) if isinstance( line_no, int ) else () ),
-            *( ( f'column { column_no }', ) if isinstance( column_no, int ) else () )
+            *( ( f'line { line_number }', ) if isinstance( line_number, int ) else () ),
+            *( ( f'column { column_number }', ) if isinstance( column_number, int ) else () )
         )
         super().__init__( msg + ( f' (at { ", ".join( specifications ) })' if specifications else '' ) )
 
@@ -37,7 +37,7 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> dict[ str, Any ]:
             except Exception as e:
                 raise ChangelogParsingError(
                     msg = f'Unable to decode line using encoding, "{ encoding }"; { e }',
-                    line_no = line_no
+                    line_number = line_no
                 )
         if isinstance( line, str ):
             line = line.removesuffix( '\n' )
@@ -57,8 +57,8 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> dict[ str, Any ]:
             if line.rstrip() != line:
                 raise ChangelogParsingError(
                     msg = "Extra space(s) at end of line",
-                    line_no = line_no,
-                    column_no = len( line.rstrip() ) + 1
+                    line_number = line_no,
+                    column_number = len( line.rstrip() ) + 1
                 )
             if line.endswith( " [YANKED]" ):
                 changes[ -1 ][ "yanked" ] = True
@@ -77,15 +77,15 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> dict[ str, Any ]:
                 except Exception as e:
                     raise ChangelogParsingError(
                         msg = f'Unable to parse changelog entry date, "{ change_date }"; { e }',
-                        line_no = line_no,
-                        column_no = len( line + sep ) + 1
+                        line_number = line_no,
+                        column_number = len( line + sep ) + 1
                     )
 
             if line.rstrip() != line:
                 raise ChangelogParsingError(
                     msg = "Extra space(s) after version",
-                    line_no = line_no,
-                    column_no = len( line.rstrip() ) + 1
+                    line_number = line_no,
+                    column_number = len( line.rstrip() ) + 1
                 )
             line = line.removeprefix( "## " )
             if line.lstrip() != line:
@@ -94,8 +94,8 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> dict[ str, Any ]:
             if not line.startswith( "[" ) or not line.endswith( "]" ):
                 raise ChangelogParsingError(
                     msg = 'Version must be enclosed with square brackets',
-                    line_no = line_no,
-                    column_no = 4 if not line.startswith( "[" ) else 4 + len( line )
+                    line_number = line_no,
+                    column_number = 4 if not line.startswith( "[" ) else 4 + len( line )
                 )
             line = line.removeprefix( "[" ).removesuffix( "]" )
             try:
@@ -134,8 +134,8 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> dict[ str, Any ]:
                 except Exception as e:
                     raise ChangelogParsingError(
                         msg = f'Failed parsing semver version, "{ match.group( 1 ) }"; { e }',
-                        line_no = line_no,
-                        column_no = 2
+                        line_number = line_no,
+                        column_number = 2
                     )
 
             for change in changes:
@@ -148,8 +148,8 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> dict[ str, Any ]:
             else:
                 raise ChangelogParsingError(
                     msg = f'No corresponding record for compare url with version, "{ match.group( 1 ) }"',
-                    line_no = line_no,
-                    column_no = 2
+                    line_number = line_no,
+                    column_number = 2
                 )
 
             change[ "compare_url" ] = match.group( 2 )
@@ -161,7 +161,7 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> dict[ str, Any ]:
         elif in_compare_urls:
             raise ChangelogParsingError(
                 f'After compare URL definitions have started, no other line types are allowed',
-                line_no = line_no
+                line_number = line_no
             )
 
         else:

@@ -4,7 +4,6 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "changelog-parser"
-version = "0.0.1"
 description = "Parses changelog files"
 readme = "README.md"
 requires-python = ">= 3.8"
@@ -26,10 +25,14 @@ classifiers = [
 ]
 urls.homepage = "https://github.com/JasonStiefel/changelog-parser"
 urls.changelog = "https://github.com/JasonStiefel/changelog-parser/blob/main/CHANGELOG.md"
+dynamic = [ "version" ]
 
 dependencies = [
   "semver"
 ]
+
+[tool.setuptools.dynamic]
+version = { attr = "changelog.__version__" }
 
 [project.optional-dependencies]
 test = [
@@ -43,8 +46,3 @@ testpaths = [ "test" ]
 
 [tool.setuptools.package-dir]
 changelog = "src"
-
-[tool.setuptools.package-data]
-profile_service = [
-  "*.ini"
-]
