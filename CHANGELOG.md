@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changing
 
-- Some error property naming
+- `*_no` ChangelogParsingError properties to `line_number` and `column_number`
 
 ## [0.0.1]
 

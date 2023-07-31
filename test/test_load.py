@@ -38,7 +38,7 @@ def test_basic_error_line_patterns( changelog_contents, error_message, msg_line_
     except Exception as e:
         assert isinstance( e, changelog.ChangelogParsingError )
         assert str( e ) == error_message
-        assert e.line_no == msg_line_no
-        assert e.column_no == msg_col_no
+        assert e.line_number == msg_line_no
+        assert e.column_number == msg_col_no
     else:
         pytest.fail( "Loading CHANGELOG did raise an exception" )
