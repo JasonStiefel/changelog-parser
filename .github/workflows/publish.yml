@@ -1,3 +1,4 @@
+name: Deploy
 on:
   push:
     branches: main
@@ -13,5 +14,3 @@ jobs:
     - run: python3 -m pip install build --user
     - run: python3 -m build --sdist --wheel --outdir dist/
     - uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.PYPI_API_TOKEN }}

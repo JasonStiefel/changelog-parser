@@ -22,16 +22,16 @@ Yet another python changelog parser.
      "type": "object",
      "properties": {
        "version": {
-         "OneOf": [ {
-           "const": "Unreleased",
-           "description": "Case Insensitive"
+         "oneOf": [ {
+           "type": "string",
+           "pattern": "^[Uu][Nn][Rr][Ee][Ll][Ee][Aa][Ss][Ee][Dd]$"
          }, {
            "type": "semver.Version",
            "description": "Python object from https://pypi.org/project/semver/"
          } ]
        },
        "date": {
-         "OneOf": [ {
+         "oneOf": [ {
            "const": null
          }, {
            "type": "datetime.date",

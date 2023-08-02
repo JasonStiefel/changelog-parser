@@ -1,0 +1,76 @@
+name: Pull Request Checks
+on:
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  Build-and-Test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - run: pip install -e .[test]
+    - run: coverage run -m pytest --junitxml=pytest.xml
+    - run: coverage xml
+    - uses: MishaKav/pytest-coverage-comment@main
+      with:
+        pytest-xml-coverage-path: ./coverage.xml
+        junitxml-path: ./pytest.xml
+  Check-Changelog-Project-Versions:
+    name: Changelog and Project Versions Match
+    runs-on: ubuntu-latest
+    if: >-
+      ! github.event.pull_request.draft
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - run: pip install .
+    - shell: python
+      run: |-
+        import changelog, semver, sys
+        from typing import Sequence
+
+        def error( msg: str, *, title: str | None = None, exit: bool = True ):
+          details = ",".join( ( f'{ key }={ value }' for key, value in {
+            "title": title
+          }.items() if value is not None ) )
+          print(
+            f'::error{ ( " " + details ) if details else "" }::{ msg }',
+            flush = True,
+            file = sys.stderr
+          )
+          if exit:
+            sys.exit( 1 )
+
+        def main( cli_args: Sequence[ str ] )-> None:
+          with open( "CHANGELOG.md", "r" ) as fp:
+            changes = changelog.load( fp )
+
+          if any( not isinstance( change[ "version" ], semver.Version ) for change in changes ):
+            error(
+              'A version in "CHANGELOG.md" is "Unreleased", which cannot be merged',
+              title = 'Unreleased" Version Invalid'
+            )
+
+          if any( change[ "date" ] is None for change in changes ):
+            error(
+              'At least one record in "CHANGELOG.md" is missing a date',
+              title = 'Record Missing Date'
+            )
+
+          if changes[ 0 ][ "version" ] != semver.Version.parse( changelog.__version__ ):
+            error(
+              'Project version and latest version in "CHANGELOG.md" do not match',
+              title = 'Version Mismatch'
+            )
+
+        if __name__ == '__main__':
+          main( sys.argv[ 1 : ] )
