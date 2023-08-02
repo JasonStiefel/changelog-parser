@@ -46,7 +46,7 @@ log_cli_level = "info"
 testpaths = [ "test" ]
 
 [tool.coverage.run]
-branch = True
+branch = true
 source_pkgs = [ "changelog" ]
 
 [tool.setuptools.package-dir]
