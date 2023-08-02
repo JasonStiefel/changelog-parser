@@ -20,7 +20,7 @@ jobs:
   Check-Changelog-Project-Versions:
     name: Changelog and Project Versions Match
     runs-on: ubuntu-latest
-    if: >-s
+    if: >-
       ! github.event.pull_request.draft
     steps:
     - uses: actions/checkout@v3
