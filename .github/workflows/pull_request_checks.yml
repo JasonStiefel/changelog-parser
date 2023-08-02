@@ -1,0 +1,39 @@
+name: Pull Request Checks
+on: pull_request_target
+
+jobs:
+  Build-and-Test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - run: pip install .[test]
+    - run: pytest -n auto
+  Check-Changelog-Project-Versions:
+    name: Changelog and Project Versions Match
+    runs-on: ubuntu-latest
+    if:
+      ! github.event.pull_request.draft
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - run: pip install .
+    - shell: python
+      run: |-
+        import changelog, semver, sys
+
+        with open( "CHANGELOG.md", "r" ) as fp:
+          changes = changelog.load( fp )
+
+        if changes[ 0 ][ "version" ] != semver.Version.parse( changelog.__version__ ):
+          print(
+            "::error title=Version Mismatch::Project version and latest version in "
+              '"CHANGELOG.md" do not match'
+            flush = True,
+            file = sys.stderr
+          )

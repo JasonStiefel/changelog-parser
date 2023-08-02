@@ -6,11 +6,14 @@ from datetime import date
 def test_example( project_example_changelog_path ):
     with open( project_example_changelog_path, "rb" ) as fp:
         changes = changelog.load( fp )
+
     assert len( changes ) == 15
+
     min_keys = { "version", "date", "yanked" }
     max_keys = min_keys | { "added", "changed", "depreciated", "removed", "fixed", "security", "compare_url" }
     for change in changes:
         assert min_keys <= change.keys() <= max_keys
+
     assert change[ -2 ] == {
         "version": semver.Version( 0, 0, 2 ),
         "date": date( 2014, 7, 10 ),
