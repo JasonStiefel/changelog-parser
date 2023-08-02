@@ -17,6 +17,7 @@ def test_example( project_example_changelog_path ):
     assert changes[ -2 ] == {
         "version": semver.Version( 0, 0, 2 ),
         "date": date( 2014, 7, 10 ),
+        "yanked": False,
         "added": [ "Explanation of the recommended reverse chronological release ordering." ],
         "compare_url": "https://github.com/olivierlacan/keep-a-changelog/compare/v0.0.1...v0.0.2"
     }
