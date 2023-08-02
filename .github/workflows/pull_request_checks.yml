@@ -17,6 +17,9 @@ jobs:
     - run: pip install .[test]
     - run: pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered -n auto | tee pytest-coverage.txt
     - uses: MishaKav/pytest-coverage-comment@main
+      with:
+        pytest-coverage-path: ./pytest-coverage.txt
+        junitxml-path: ./pytest.xml
   Check-Changelog-Project-Versions:
     name: Changelog and Project Versions Match
     runs-on: ubuntu-latest
