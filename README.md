@@ -22,7 +22,7 @@ Yet another python changelog parser.
      "type": "object",
      "properties": {
        "version": {
-         "OneOf": [ {
+         "oneOf": [ {
            "const": "Unreleased",
            "description": "Case Insensitive"
          }, {
@@ -31,7 +31,7 @@ Yet another python changelog parser.
          } ]
        },
        "date": {
-         "OneOf": [ {
+         "oneOf": [ {
            "const": null
          }, {
            "type": "datetime.date",
