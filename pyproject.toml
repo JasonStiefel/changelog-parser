@@ -47,7 +47,7 @@ testpaths = [ "test" ]
 
 [tool.coverage.run]
 source = [
-  "src"
+  "src/"
 ]
 
 [tool.setuptools.package-dir]
