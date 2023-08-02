@@ -14,7 +14,6 @@ Yet another python changelog parser.
    with open( "CHANGELOG.md", 'r' ) as fp:
      changes = changelog.loads( fp.read() )
    ```
-   
 * Returns it in the following schema (some types are Python objects and not valid JSON schema):
    ```js
    {
