@@ -3,6 +3,7 @@ on:
   pull_request_target:
     branches:
     - main
+    - more-fixes
 
 jobs:
   Build-and-Test:
