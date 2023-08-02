@@ -23,7 +23,7 @@ Yet another python changelog parser.
      "properties": {
        "version": {
          "oneOf": [ {
-           "type": "String",
+           "type": "string",
            "pattern": "^[Uu][Nn][Rr][Ee][Ll][Ee][Aa][Ss][Ee][Dd]$"
          }, {
            "type": "semver.Version",
