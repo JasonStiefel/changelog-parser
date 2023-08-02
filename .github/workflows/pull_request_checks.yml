@@ -38,7 +38,7 @@ jobs:
         if not isinstance( changes[ 0 ][ "version" ], semver.Version ):
           print(
             '::error title="Unreleased" Version Invalid::Latest version in "CHANGELOG.md" '
-              'is "Unreleased", which cannot be merged'
+              'is "Unreleased", which cannot be merged',
             flush = True,
             file = sys.stderr
           )
@@ -47,7 +47,7 @@ jobs:
         if changes[ 0 ][ "version" ] != semver.Version.parse( changelog.__version__ ):
           print(
             "::error title=Version Mismatch::Project version and latest version in "
-              '"CHANGELOG.md" do not match'
+              '"CHANGELOG.md" do not match',
             flush = True,
             file = sys.stderr
           )
