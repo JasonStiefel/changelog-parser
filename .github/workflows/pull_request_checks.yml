@@ -17,7 +17,7 @@ jobs:
       with:
         python-version: '3.11'
     - run: pip install .[test]
-    - run: coverage run -m pytest --junitxml=pytest.xml -n auto
+    - run: coverage run -m pytest --junitxml=pytest.xml
     - run: coverage xml 
     - uses: MishaKav/pytest-coverage-comment@main
       with:
