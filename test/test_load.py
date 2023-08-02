@@ -38,11 +38,18 @@ def test_example( project_example_changelog_path ):
         ( "## [1.1.1] ", "Extra space(s) at end of line (at line 1, column 11)", 1, 11 ),
         ( "## [1.1.1", "Version must be enclosed with square brackets (at line 1, column 10)", 1, 10 ),
         ( "## 1.1.1]", "Version must be enclosed with square brackets (at line 1, column 4)", 1, 4 ),
+        ( "##  [1.1.1] - 2023-03-05", 'Extra space(s) before version (at line 1, column 4)', 1, 4 ),
         ( "## [asdfasdf]", 'Failed parsing semver version, "asdfasdf"; asdfasdf is not valid SemVer '
             'string (at line 1, column 5)', 1, 5 ),
         ( "## [Unreleased]\nasdf", 'Unrecognized line pattern, "asdf" (at line 2)', 2, None ),
         ( "## [Unreleased]\n### asdf", 'Invalid change type, "asdf" (at line 2, column 5)', 2, 5 ),
-        ( "## [Unreleased]\n\n### asdf", 'Invalid change type, "asdf" (at line 3, column 5)', 3, 5 )
+        ( "## [Unreleased]\n\n### asdf", 'Invalid change type, "asdf" (at line 3, column 5)', 3, 5 ),
+        ( "## [Unreleased]\n\n- Change", 'Change not under a category section (at line 3)', 3, None ),
+        ( "## [Unreleased]\n\n### Added\n\n### Added", 'Multiple "Added" sections found (at line 5, column 5)', 5, 5 ),
+        ( '## [Unreleased]\n\n[1.1.1]: https://asdf', 'No corresponding record for compare url with version, '
+            '"1.1.1" (at line 3, column 2)', 3, 2 ),
+        ( '## [1.1.1]\n\n[1.1.1]: https://asdf\n\n## [Unreleased]', 'After compare URL definitions have started, '
+            'no other line types are allowed (at line 5)', 5, None )
     ])
 def test_basic_error_line_patterns( changelog_contents, error_message, msg_line_no, msg_col_no ):
     try:
@@ -53,4 +60,7 @@ def test_basic_error_line_patterns( changelog_contents, error_message, msg_line_
         assert e.line_number == msg_line_no
         assert e.column_number == msg_col_no
     else:
-        pytest.fail( "Loading CHANGELOG did raise an exception" )
+        pytest.fail( "Loading CHANGELOG did not raise an exception" )
+
+def test_dir():
+    assert "__version__" in changelog.__dir__()

@@ -133,12 +133,12 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
             if line not in ( 'Added', 'Changed', 'Deprecated', 'Removed', 'Fixed', 'Security' ):
                 raise ChangelogParsingError( f'Invalid change type, "{ line }"', line_no, 5 )
             if line.lower() in changes[ -1 ]:
-                raise ChangelogParsingError( f'Multiple "{ line }" sections found', line_no, 4 )
+                raise ChangelogParsingError( f'Multiple "{ line }" sections found', line_no, 5 )
             changes[ -1 ][ ( section := line.lower() ) ] = []
 
         elif line.startswith( '- ' ) or line.startswith( '* ' ):
             if section is None:
-                raise ChangelogParsingError( 'Change not under a category section', line_no, 0 )
+                raise ChangelogParsingError( 'Change not under a category section', line_no )
             changes[ -1 ][ section ].append( line[ 2 : ] )
 
         elif ( line.startswith( "  " ) or not line ) and section is not None and changes[ -1 ][ section ]:
