@@ -50,7 +50,7 @@ def test_example( project_example_changelog_path ):
             '"1.1.1" (at line 3, column 2)', 3, 2 ),
         ( '## [1.1.1]\n\n[1.1.1]: https://asdf\n\n## [Unreleased]', 'After compare URL definitions have started, '
             'no other line types are allowed (at line 5)', 5, None )
-    ])
+    ] )
 def test_basic_error_line_patterns( changelog_contents, error_message, msg_line_no, msg_col_no ):
     try:
         changelog.loads( changelog_contents )
@@ -64,3 +64,26 @@ def test_basic_error_line_patterns( changelog_contents, error_message, msg_line_
 
 def test_dir():
     assert "__version__" in changelog.__dir__()
+
+def test_invalid_streams( numerical_stream ):
+    try:
+        changelog.load( numerical_stream )
+    except Exception as e:
+        assert isinstance( e, changelog.ChangelogParsingError )
+        assert str( e ) == 'Parameter\'s "readline" function call returned unreadable type, "int"'
+        assert e.line_number is None
+        assert e.column_number is None
+    else:
+        pytest.fail( "Loading invalid stream did not raise an exception" )
+
+def test_non_utf_8_input_object( non_utf8_stream ):
+    try:
+        changelog.load( non_utf8_stream )
+    except Exception as e:
+        assert isinstance( e, changelog.ChangelogParsingError )
+        assert str( e ) == ( 'Unable to decode line using encoding, "utf-8"; \'utf-8\' codec '
+            'can\'t decode byte 0xff in position 0: invalid start byte (at line 1)' )
+        assert e.line_number == 1
+        assert e.column_number is None
+    else:
+        pytest.fail( "Loading non-utf-8 stream did not raise an exception" )
