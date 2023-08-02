@@ -23,8 +23,8 @@ Yet another python changelog parser.
      "properties": {
        "version": {
          "oneOf": [ {
-           "const": "Unreleased",
-           "description": "Case Insensitive"
+           "type": "String",
+           "pattern": "^[Uu][Nn][Rr][Ee][Ll][Ee][Aa][Ss][Ee][Dd]$"
          }, {
            "type": "semver.Version",
            "description": "Python object from https://pypi.org/project/semver/"

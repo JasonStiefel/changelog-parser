@@ -1,5 +1,7 @@
 import changelog
 import pytest
+import semver
+from datetime import date
 
 def test_example( project_example_changelog_path ):
     with open( project_example_changelog_path, "rb" ) as fp:
@@ -9,6 +11,12 @@ def test_example( project_example_changelog_path ):
     max_keys = min_keys | { "added", "changed", "depreciated", "removed", "fixed", "security", "compare_url" }
     for change in changes:
         assert min_keys <= change.keys() <= max_keys
+    assert change[ -2 ] == {
+        "version": semver.Version( 0, 0, 2 ),
+        "date": date( 2014, 7, 10 ),
+        "added": [ "Explanation of the recommended reverse chronological release ordering." ],
+        "compare_url": "https://github.com/olivierlacan/keep-a-changelog/compare/v0.0.1...v0.0.2"
+    }
 
 @pytest.mark.parametrize(
     ( "changelog_contents", "error_message", "msg_line_no", "msg_col_no" ),
