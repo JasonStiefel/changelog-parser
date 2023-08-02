@@ -48,6 +48,8 @@ def test_example( project_example_changelog_path ):
         ( "## [Unreleased]\n\n### Added\n\n### Added", 'Multiple "Added" sections found (at line 5, column 5)', 5, 5 ),
         ( '## [Unreleased]\n\n[1.1.1]: https://asdf', 'No corresponding record for compare url with version, '
             '"1.1.1" (at line 3, column 2)', 3, 2 ),
+        ( '## [Unreleased]\n\n[1.a.1]: https://asdf', 'Failed parsing semver version, "1.a.1"; 1.a.1 is '
+            'not valid SemVer string (at line 3, column 2)', 3, 2 ),
         ( '## [1.1.1]\n\n[1.1.1]: https://asdf\n\n## [Unreleased]', 'After compare URL definitions have started, '
             'no other line types are allowed (at line 5)', 5, None )
     ] )
