@@ -37,7 +37,7 @@ version = { attr = "changelog.__version__" }
 [project.optional-dependencies]
 test = [
   "pytest",
-  "pytest-cov",
+  "coverage",
   "pytest-xdist"
 ]
 

@@ -17,5 +17,5 @@ test: $(VENV_LOCATION)/bin/pytest
 	$<
 
 cover: $(VENV_LOCATION)/bin/pytest
-	$(VENV_LOCATION)/bin/coverage run -n auto
+	$(VENV_LOCATION)/bin/coverage run -m pytest -n auto
 	$(VENV_LOCATION)/bin/coverage html --directory $@
