@@ -1,5 +1,8 @@
 name: Pull Request Checks
-on: pull_request_target
+on:
+  pull_request_target:
+    branches:
+    - main
 
 jobs:
   Build-and-Test:
@@ -11,7 +14,8 @@ jobs:
       with:
         python-version: '3.11'
     - run: pip install .[test]
-    - run: pytest -n auto
+    - run: pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=app tests/ -n auto | tee pytest-coverage.txt
+    - uses: MishaKav/pytest-coverage-comment@main
   Check-Changelog-Project-Versions:
     name: Changelog and Project Versions Match
     runs-on: ubuntu-latest
@@ -30,6 +34,15 @@ jobs:
         with open( "CHANGELOG.md", "r" ) as fp:
           changes = changelog.load( fp )
 
+        if not isinstance( changes[ 0 ][ "version" ], semver.Version ):
+          print(
+            '::error title="Unreleased" Version Invalid::Latest version in "CHANGELOG.md" '
+              'is "Unreleased", which cannot be merged'
+            flush = True,
+            file = sys.stderr
+          )
+          sys.exit( 1 )
+
         if changes[ 0 ][ "version" ] != semver.Version.parse( changelog.__version__ ):
           print(
             "::error title=Version Mismatch::Project version and latest version in "
@@ -37,3 +50,4 @@ jobs:
             flush = True,
             file = sys.stderr
           )
+          sys.exit( 1 )
