@@ -7,10 +7,8 @@ $(VENV_LOCATION):
 			python -m venv --clear $@,$\
 			$(error Unable to determine a way to invoke python to create a venv)))
 
-.PHONY: install
 $(foreach exec,pytest coverage,$(VENV_LOCATION)/bin/$(exec)): $(VENV_LOCATION)
 	$</bin/python -m pip install -e .[test]
-install-test: $(VENV_LOCATION)/bin/test-changelog;
 
 .PHONY: test
 test: $(VENV_LOCATION)/bin/pytest
