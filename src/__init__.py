@@ -117,10 +117,13 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
                     column_number = 4 if not line.startswith( "[" ) else 4 + len( line )
                 )
             line = line.removeprefix( "[" ).removesuffix( "]" )
-            try:
-                changes[ -1 ][ "version" ] = line if line.lower() == "unreleased" else Version.parse( line )
-            except Exception as e:
-                raise ChangelogParsingError( f'Failed parsing semver version, "{ line }"; { e }', line_no, 5 )
+            if line.lower() == "unreleased":
+                changes[ -1 ][ "version" ] = line.capitalize()
+            else:
+                try:
+                    changes[ -1 ][ "version" ] = Version.parse( line )
+                except Exception as e:
+                    raise ChangelogParsingError( f'Failed parsing semver version, "{ line }"; { e }', line_no, 5 )
 
         elif not changes:
             continue
@@ -146,7 +149,7 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
 
         elif ( match := re.fullmatch( r'\[([^\]]+)\]: (https?:\/\/.*)', line ) ):
             if match.group( 1 ).lower() == "unreleased":
-                version = match.group( 1 )
+                version = match.group( 1 ).capitalize()
             else:
                 try:
                     version = Version.parse( match.group( 1 ) )
@@ -159,7 +162,7 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
 
             for change in changes:
                 if isinstance( change[ "version" ], str ) and isinstance( version, str ):
-                    if change[ "version" ].lower() == version.lower():
+                    if change[ "version" ] == version:
                         break
                 if isinstance( change[ "version" ], Version ) and isinstance( version, Version ):
                     if change[ "version" ] == version:
