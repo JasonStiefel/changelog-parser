@@ -17,7 +17,7 @@ jobs:
       with:
         python-version: '3.11'
     - run: pip install .[test]
-    - run: pytest --junitxml=pytest.xml --cov=src --cov-report=xml:coverage.xml -n auto
+    - run: pytest --junitxml=pytest.xml --cov-report=xml:coverage.xml -n auto
     - uses: MishaKav/pytest-coverage-comment@main
       with:
         pytest-xml-coverage-path: ./coverage.xml
