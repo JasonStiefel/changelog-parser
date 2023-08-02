@@ -14,7 +14,7 @@ def test_example( project_example_changelog_path ):
     for change in changes:
         assert min_keys <= change.keys() <= max_keys
 
-    assert change[ -2 ] == {
+    assert changes[ -2 ] == {
         "version": semver.Version( 0, 0, 2 ),
         "date": date( 2014, 7, 10 ),
         "added": [ "Explanation of the recommended reverse chronological release ordering." ],
