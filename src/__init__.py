@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 import re
 from datetime import date
@@ -8,14 +8,20 @@ from semver import Version
 from typing import ( Optional, Any )
 from io import ( IOBase, StringIO )
 
-class ChangelogParsingError(Exception):
+class ChangelogParsingError( Exception ):
     @property
     def line_number( self )-> Optional[ int ]:
+        """
+        Parse the line number from the error message, if defined
+        """
         if ( match := re.search( r' \(at line (\d+)(?:, column \d+)?\)$', str( self ) ) ):
             return int( match.group( 1 ) )
 
     @property
     def column_number( self )-> Optional[ int ]:
+        """
+        Parse the column number from the error message, if defined
+        """
         if ( match := re.search( r' \(at (?:line \d+, )?column (\d+)\)$', str( self ) ) ):
             return int( match.group( 1 ) )
 
@@ -26,7 +32,14 @@ class ChangelogParsingError(Exception):
         )
         super().__init__( msg + ( f' (at { ", ".join( specifications ) })' if specifications else '' ) )
 
-def load( fp: IOBase, encoding: str = 'utf-8' )-> dict[ str, Any ]:
+def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
+    """
+    Parse changelog data from a stream
+
+    :param input: a stream that outputs changelog data (eg. a file opened for reading)
+    :param encoding: if the stream outputs binary data, decode it using this encoding
+    :return: a list of dictionaries with changelog data (see README.md for structure)
+    """
     line_no, changes, section, in_compare_urls = 0, [], None, False
 
     while ( line := fp.readline() ):
@@ -71,6 +84,12 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> dict[ str, Any ]:
             line, sep, change_date = line.partition( ' - ' )
             if change_date.lstrip() != change_date:
                 raise ChangelogParsingError( "Extra space(s) before date", line_no, len( line + sep ) + 1 )
+            if "]" in line and not line.rstrip().endswith( "]" ):
+                raise ChangelogParsingError(
+                    msg = 'Version and date must be separated by " - "',
+                    line_number = line_no,
+                    column_number = line.find( "]" ) + 2
+                )
             if sep:
                 try:
                     changes[ -1 ][ "date" ] = date.fromisoformat( change_date )
@@ -172,5 +191,22 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> dict[ str, Any ]:
 
     return changes
 
-def loads( input: str ):
+def loads( input: str )-> list[ dict[ str, Any ] ]:
+    """
+    Parse data from a changelog provided as a string
+
+    :param input: the string parse as a changelog
+    :return: a list of dictionaries with changelog data (see README.md for structure)
+    """
     return load( StringIO( input ) )
+
+
+__all__ = [
+    '__version__',
+    'ChangelogParsingError',
+    'load',
+    'loads'
+]
+
+def __dir__() -> list[str]:
+    return __all__

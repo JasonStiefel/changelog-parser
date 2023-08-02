@@ -21,7 +21,7 @@ def test_example( project_example_changelog_path ):
         ( "## [1.1.1] - hjksdgfwiuehf", 'Unable to parse changelog entry date, "hjksdgfwiuehf"; '
             'Invalid isoformat string: \'hjksdgfwiuehf\' (at line 1, column 14)', 1, 14 ),
         ( "## [1.1.1] -  2023-03-05", "Extra space(s) before date (at line 1, column 14)", 1, 14 ),
-        ( "## [1.1.1] 2023-03-05", "Version must be enclosed with square brackets (at line 1, column 22)", 1, 22 ),
+        ( "## [1.1.1] 2023-03-05", 'Version and date must be separated by " - " (at line 1, column 11)', 1, 11 ),
         ( "## [1.1.1]  - 2023-03-05", "Extra space(s) after version (at line 1, column 11)", 1, 11 ),
         ( "## [1.1.1] ", "Extra space(s) at end of line (at line 1, column 11)", 1, 11 ),
         ( "## [1.1.1", "Version must be enclosed with square brackets (at line 1, column 10)", 1, 10 ),

@@ -2,7 +2,7 @@ VENV_LOCATION ?= venv
 
 $(VENV_LOCATION):
 	$(if $(filter 0,$(shell python3 --version >/dev/null 2>&1; echo $$?)),$\
-		python3 -m venv --clea $@,$\
+		python3 -m venv --clear $@,$\
 		$(if $(filter 0,$(shell python --version >/dev/null 2>&1; echo $$?)),$\
 			python -m venv --clear $@,$\
 			$(error Unable to determine a way to invoke python to create a venv)))

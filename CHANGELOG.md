@@ -5,9 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.3]
+
+### Fixed
+
+- Error message regarding version/data separation in titles
+
 ## [0.0.2]
 
-### Changing
+### Changed
 
 - `*_no` ChangelogParsingError properties to `line_number` and `column_number`
 
