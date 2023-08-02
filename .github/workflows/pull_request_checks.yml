@@ -9,6 +9,8 @@ jobs:
   Build-and-Test:
     name: Build and Test
     runs-on: ubuntu-latest
+    permissions:
+      discussions: write
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v4
