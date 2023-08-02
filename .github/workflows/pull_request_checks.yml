@@ -15,10 +15,10 @@ jobs:
       with:
         python-version: '3.11'
     - run: pip install .[test]
-    - run: pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered -n auto | tee pytest-coverage.txt
+    - run: pytest --junitxml=pytest.xml --cov-report "xml:coverage.xml" -n auto
     - uses: MishaKav/pytest-coverage-comment@main
       with:
-        pytest-coverage-path: ./pytest-coverage.txt
+        pytest-xml-coverage-path: ./coverage.xml
         junitxml-path: ./pytest.xml
   Check-Changelog-Project-Versions:
     name: Changelog and Project Versions Match
