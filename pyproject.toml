@@ -56,6 +56,8 @@ source_pkgs = [ "changelog" ]
 [tool.pylint.main]
 recursive = true
 good-names = [ "e", "fp" ]
+fail-on = [ "error" ]
+fail-under = 9
 
 [tool.pylint."messages control"]
 disable = [ "too-many-branches", "too-many-statements" ]
