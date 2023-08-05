@@ -31,3 +31,39 @@ jobs:
         '::{category} title=pylint,file={path},line={line},lineEnd={end_line},col={column},endColumn={end_column}::[{msg_id}] {msg}'
         | sed -r '/^::(error|warning)/! s/^::(\S+) title=pylint/::notice title=pylint - \1/g'
         | tee >(sed -rn 's/^Your code has been rated at (\S+).*$/score=\1/p' >> "$GITHUB_OUTPUT")
+    - id: pylint-badge
+      shell: bash
+      run: |-
+        printf -- '${{ steps.pylint.outputs.score }}' | jq -sRMr '
+        ( split("/") | map(tonumber) | .[0] / .[1] * 100 ) as $percent |
+        if $percent == 0 then "FF0000"
+        else if 0 < $percent && $percent < 10 then "FF3300"
+        else if 10 <= $percent && $percent < 20 then "ff6600"
+        else if 20 <= $percent && $percent < 30 then "ff9900"
+        else if 30 <= $percent && $percent < 40 then "FFCC00"
+        else if 40 <= $percent && $percent < 50 then "FFFF00"
+        else if 50 <= $percent && $percent < 60 then "ccff00"
+        else if 60 <= $percent && $percent < 70 then "99ff00"
+        else if 70 <= $percent && $percent < 80 then "ff6600"
+        else if 80 <= $percent && $percent < 90 then "66ff00"
+        else if 90 <= $percent && $percent < 100 then "33ff00"
+        else "00FF00" end as $color |
+        "url=https://img.shields.io/badge/\(
+            "pylint score-\( $percent * 10 | round / 10 )-\( $color )"
+          | @uri)"
+        ' >> "$GITHUB_OUTPUT"
+    - id: find-comment
+      uses: peter-evans/find-comment@v2
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-author: github-actions
+        body-includes: >-
+          <!-- PyLint Comment: ${{ github.workflow }} -->
+    - uses: peter-evans/create-or-update-comment@v3
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-id: ${{ steps.find-comment.outputs.comment-id }}
+        edit-mode: replace
+        body: |-
+          <!-- PyLint Comment: ${{ github.workflow }} -->
+          [![badge](${{ steps.pylint-badge.outputs.url }})])(${{ github.event.pull_request.diff_url }})
