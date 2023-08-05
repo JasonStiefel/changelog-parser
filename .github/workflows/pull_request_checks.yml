@@ -3,6 +3,9 @@ on:
   pull_request:
     branches:
     - main
+    paths:
+    - src/**
+    - pyproject.toml
 
 jobs:
   Build-and-Test:
@@ -29,6 +32,13 @@ jobs:
       ! github.event.pull_request.draft
     steps:
     - uses: actions/checkout@v3
+      with:
+        path: head
+    - uses: actions/checkout@v3
+      with:
+        repository: ${{ github.event.pull_request.base.repo.name }}
+        ref: ${{ github.base_ref }}
+        path: base
     - uses: actions/setup-python@v4
       with:
         python-version: '3.11'
@@ -38,9 +48,20 @@ jobs:
         import changelog, semver, sys
         from typing import Sequence
 
-        def error( msg: str, *, title: str | None = None, exit: bool = True ):
+        def error(
+              msg: str,
+              *,
+              title: str | None = None,
+              file: str | None = None,
+              line: int | None = None,
+              col: int | None = None,
+              exit: bool = True
+            ):
           details = ",".join( ( f'{ key }={ value }' for key, value in {
-            "title": title
+            "title": title,
+            "file": file,
+            "line": line,
+            "col": col
           }.items() if value is not None ) )
           print(
             f'::error{ ( " " + details ) if details else "" }::{ msg }',
@@ -51,26 +72,66 @@ jobs:
             sys.exit( 1 )
 
         def main( cli_args: Sequence[ str ] )-> None:
-          with open( "CHANGELOG.md", "r" ) as fp:
-            changes = changelog.load( fp )
+          try:
+            with open( "head/CHANGELOG.md", "r" ) as fp:
+              head_changes = changelog.load( fp )
+          except changelog.ChangelogParsingError as e:
+            error( msg = str( e ), file = "CHANGELOG.md", line = e.line_number, col = e.column_number )
 
-          if any( not isinstance( change[ "version" ], semver.Version ) for change in changes ):
+          try:
+            with open( "base/CHANGELOG.md", "r" ) as fp:
+              base_changes = changelog.load( fp )
+          except Exception as e:
+            error( msg = f'{ type( e ).__name__ }: { e }', title = 'Error Loading "CHANGELOG.md" from Base' )
+
+          if not head_changes:
+            error(
+              'A change entry is required in "CHANGELOG.md"',
+              title = "No Changelog Entry Found"
+            )
+
+          if any( not isinstance( change[ "version" ], semver.Version ) for change in head_changes ):
             error(
               'A version in "CHANGELOG.md" is "Unreleased", which cannot be merged',
               title = 'Unreleased" Version Invalid'
             )
 
-          if any( change[ "date" ] is None for change in changes ):
+          if any( change[ "date" ] is None for change in head_changes ):
             error(
               'At least one record in "CHANGELOG.md" is missing a date',
               title = 'Record Missing Date'
             )
 
-          if changes[ 0 ][ "version" ] != semver.Version.parse( changelog.__version__ ):
+          if head_changes[ 0 ][ "version" ] != semver.Version.parse( changelog.__version__ ):
             error(
               'Project version and latest version in "CHANGELOG.md" do not match',
               title = 'Version Mismatch'
             )
+          
+          if 1 < len( head_changes ):
+            last_version = head_changes[ 1 ][ "version" ]
+            incremented = ( last_version.bump_major(), last_version.bump_minor(), last_version.bump_patch() )
+            if head_changes[ 0 ][ "version" ] not in incremented:
+              error(
+                f'Latest "CHANGELOG.md" version, "{ head_changes[ 0 ][ "version" ] }", is not a major, minor,'
+                  ' or patch incrementation of the previous version, "{ head_changes[ ` ][ "version" ] }"',
+                title = '"CHANGELOG.md" Version Not Incremented'
+              )
+
+          if base_changes:
+
+            if head_changes[ 0 ][ "version" ] == base_changes[ 0 ][ "version" ]:
+              error(
+                'A new version with an incremented semver version is required in "CHANGELOG.md"',
+                title = "New Version Required"
+              )
+            
+            if (  ( change[ "version" ] for change in head_changes[ 1 : ] )
+                != ( change[ "version" ] for change in base_changes ) ):
+              error(
+                'Previously released changelog versions are immutable',
+                title = "Previously Released Version Changed"
+              )
 
         if __name__ == '__main__':
           main( sys.argv[ 1 : ] )
