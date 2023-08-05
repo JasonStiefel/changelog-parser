@@ -30,4 +30,5 @@ jobs:
         pylint src
         --msg-template '::{category} title=pylint,file={path},line={line},lineEnd={end_line},col={column},endColumn={end_column}::[{msg_id}] {msg}'
         | sed -r '/^::(error|warning)/! s/^::(\S+) title=pylint/::notice title=pylint - \1/g'
-        | tee sed -nr 's/^Your code has been rated at ([^ ]+)/score=\1/' >> "$GITHUB_OUTPUT"
+        | tee /dev/tty
+        | sed -nr 's/^Your code has been rated at ([^ ]+)/score=\1/' >> "$GITHUB_OUTPUT"
