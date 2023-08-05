@@ -20,10 +20,11 @@ $(foreach exec,pytest coverage pylint,$(VENV_LOCATION)/bin/$(exec)): $(VENV_LOCA
 test: $(VENV_LOCATION)/bin/pytest ## run unit tests
 	$<
 
-cover: $(VENV_LOCATION)/bin/coverage ## run unit tests and generate a coverage report
-	$< run -m pytest
+.coverage: $(foreach exec,coverage pytest,$(VENV_LOCATION)/bin/$(exec))
+	$< run --data-file $@ -m pytest
+cover: $(VENV_LOCATION)/bin/coverage .coverage ## run unit tests and generate a coverage report
 	$< html --directory $@
 
 .PHONY: lint
-lint: $(VENV_LOCATION)/bin/pylint
+lint: $(VENV_LOCATION)/bin/pylint ## lint the source code
 	$< src
