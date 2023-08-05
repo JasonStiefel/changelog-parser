@@ -16,21 +16,30 @@ jobs:
       ! github.event.pull_request.draft
     steps:
     # Gather Pull Request Change Information
-    - id: change-check
+    - id: changelog-change-check
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
-      run: >-
-        gh pr list --repo ${{ github.event.pull_request.base.repo.full_name }} --json number,files --jq '
-          if any( .number == ${{ github.event.pull_request.number }} ) then
-            map( select( .number == ${{ github.event.pull_request.number }} ).files )[]
-          else error(
-            "\n::error title=\"Pull Request Not Found\"::Unable to find files for pull request " +
-            "#${{ github.event.pull_request.number }}"
-          ) end |
-          "changelog-changed=\( any( .path == "CHANGELOG.md" ) )",
-          "source-changed=\( any( .path | startswith( "src/" ) ) )"
-        ' >> "$GITHUB_OUTPUT"
+      run: |-
+        if { gh pr diff \
+            --repo ${{ github.event.pull_request.base.repo.full_name }} \
+            --name-only ${{ github.event.pull_request.number }} \
+          | grep --silent ^CHANGELOG.md$; }
+        then echo "changed=true" >> "$GITHUB_OUTPUT"
+        else echo "changed=false" >> "$GITHUB_OUTPUT"
+        fi
+    - id: source-change-check
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |-
+        if { gh pr diff \
+            --repo ${{ github.event.pull_request.base.repo.full_name }} \
+            --name-only ${{ github.event.pull_request.number }} \
+          | grep --silent ^src/; }
+        then echo "changed=true" >> "$GITHUB_OUTPUT"
+        else echo "changed=false" >> "$GITHUB_OUTPUT"
+        fi
 
     # Checkout Applicable Source Code
     - uses: actions/checkout@v3
@@ -53,8 +62,8 @@ jobs:
       run: pip install ./head
     - shell: python
       env:
-        SOURCE_CHANGED: ${{ steps.change-check.outputs.source-changed }}
-        CHANGELOG_CHANGED: ${{ steps.change-check.outputs.changelog-changed }}
+        SOURCE_CHANGED: ${{ steps.source-change-check.outputs.changed }}
+        CHANGELOG_CHANGED: ${{ steps.changelog-change-check.outputs.changed }}
       run: |-
         import changelog, semver, sys, os
         from typing import Sequence
