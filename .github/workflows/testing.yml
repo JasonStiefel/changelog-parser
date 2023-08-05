@@ -36,30 +36,30 @@ jobs:
       run: |-
         printf -- '${{ steps.pylint.outputs.score }}' | jq -sRMr '
         ( split("/") | map(tonumber) | .[0] / .[1] * 100 ) as $percent |
-        ( if $percent == 0 then "FF0000"
-        elif 0 < $percent and $percent < 10 then "FF3300"
-        elif 10 <= $percent and $percent < 20 then "ff6600"
-        elif 20 <= $percent and $percent < 30 then "ff9900"
-        elif 30 <= $percent and $percent < 40 then "FFCC00"
-        elif 40 <= $percent and $percent < 50 then "FFFF00"
-        elif 50 <= $percent and $percent < 60 then "ccff00"
-        elif 60 <= $percent and $percent < 70 then "99ff00"
-        elif 70 <= $percent and $percent < 80 then "ff6600"
-        elif 80 <= $percent and $percent < 90 then "66ff00"
-        elif 90 <= $percent and $percent < 100 then "33ff00"
+        ( if $percent < 50 then "FF0000"
+        elif 50 <= $percent and $percent < 55 then "FF3300"
+        elif 55 <= $percent and $percent < 60 then "ff6600"
+        elif 60 <= $percent and $percent < 65 then "ff9900"
+        elif 65 <= $percent and $percent < 70 then "FFCC00"
+        elif 70 <= $percent and $percent < 75 then "FFFF00"
+        elif 75 <= $percent and $percent < 80 then "ccff00"
+        elif 80 <= $percent and $percent < 85 then "99ff00"
+        elif 85 <= $percent and $percent < 90 then "ff6600"
+        elif 90 <= $percent and $percent < 95 then "66ff00"
+        elif 95 <= $percent and $percent < 100 then "33ff00"
         else "00FF00" end ) as $color |
-        "url=https://img.shields.io/badge/\(
-            "PyLint Score-\( $percent * 10 | round / 10 )-\( $color )"
-          | @uri)"
+        "url=https://img.shields.io/badge/\( "PyLint Score-\( . )-\( $color )" | @uri)"
         ' >> "$GITHUB_OUTPUT"
     - id: find-comment
-      uses: peter-evans/find-comment@v2
-      with:
-        repository: ${{ github.event.pull_request.base.repo.full_name }}
-        issue-number: ${{ github.event.pull_request.number }}
-        comment-author: github-actions
-        body-includes: >-
-          <!-- PyLint Comment: ${{ github.workflow }} -->
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: >-
+        gh pr view --repo ${{ github.event.pull_request.base.repo.full_name }}
+        --json comments --jq '.comments |
+          map( select( .body | startswith( "<!-- PyLint Comment: Unit Testing -->" ) ) ) |
+          "comment-id=\( .[-1].id )"
+        ' ${{ github.event.pull_request.number }} >> "$GITHUB_OUTPUT"
     - uses: peter-evans/create-or-update-comment@v3
       with:
         issue-number: ${{ github.event.pull_request.number }}
@@ -67,7 +67,4 @@ jobs:
         edit-mode: replace
         body: |-
           <!-- PyLint Comment: ${{ github.workflow }} -->
-          [![badge](${{ steps.pylint-badge.outputs.url }})](${{ format( '{0}/pull/{1}/files',
-            github.repositoryUrl,
-            github.event.pull_request.number
-          ) }})
+          [![badge](${{ steps.pylint-badge.outputs.url }})](${{ github.event.pull_request.html_url }})
