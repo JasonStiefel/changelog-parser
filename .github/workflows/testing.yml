@@ -36,7 +36,7 @@ jobs:
       run: |-
         printf -- '${{ steps.pylint.outputs.score }}' | jq -sRMr '
         ( split("/") | map(tonumber) | .[0] / .[1] * 100 ) as $percent |
-        if $percent == 0 then "FF0000"
+        ( if $percent == 0 then "FF0000"
         elif 0 < $percent and $percent < 10 then "FF3300"
         elif 10 <= $percent and $percent < 20 then "ff6600"
         elif 20 <= $percent and $percent < 30 then "ff9900"
@@ -47,7 +47,7 @@ jobs:
         elif 70 <= $percent and $percent < 80 then "ff6600"
         elif 80 <= $percent and $percent < 90 then "66ff00"
         elif 90 <= $percent and $percent < 100 then "33ff00"
-        else "00FF00" end as $color |
+        else "00FF00" end ) as $color |
         "url=https://img.shields.io/badge/\(
             "pylint score-\( $percent * 10 | round / 10 )-\( $color )"
           | @uri)"
