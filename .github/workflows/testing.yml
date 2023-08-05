@@ -26,4 +26,4 @@ jobs:
         junitxml-path: ./pytest.xml
     - run: >-
         pylint src
-        --msg-template '::{category} file={path},line={line},lineEnd={end_line},col={column},endColumn={end_column}::[{msg_id}] {msg}'
+        --msg-template '::{category} title=pylint,file={path},line={line},lineEnd={end_line},col={column},endColumn={end_column}::[{msg_id}] {msg}'
