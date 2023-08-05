@@ -23,10 +23,12 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: >-
         gh pr list --repo ${{ github.event.pull_request.base.repo.full_name }} --json number,files --jq '
-          if any( .number == ${{ github.event.pull_request.number }} ) | not then error(
+          if any( .number == ${{ github.event.pull_request.number }} ) then
+            map( select( .number == ${{ github.event.pull_request.number }} ).files )[]
+          else error(
             "\n::error title=\"Pull Request Not Found\"::Unable to find files for pull request " +
             "#${{ github.event.pull_request.number }}"
-          ) else map( select( .number == ${{ github.event.pull_request.number }} ).files )[] end |
+          ) end |
           "changelog-changed=\( any( .path == "CHANGELOG.md" ) )",
           "source-changed=\( any( .path | startswith( "src/" ) ) )"
         ' >> "$GITHUB_OUTPUT"
