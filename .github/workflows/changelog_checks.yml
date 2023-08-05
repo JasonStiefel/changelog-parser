@@ -31,7 +31,7 @@ jobs:
       with:
         repository: ${{ github.event.pull_request.base.repo.full_name }}
         ref: ${{ github.base_ref }}
-        path: ${{ runner.temp }}/base
+        path: checked-out-base-repository
         sparse-checkout: CHANGELOG.md
     - uses: actions/setup-python@v4
       with:
@@ -40,7 +40,7 @@ jobs:
       run: pip install .
     - shell: python
       env:
-        BASE_CHANGELOG_PATH: ${{ runner.temp }}/base/CHANGELOG.md
+        BASE_CHANGELOG_PATH: checked-out-base-repository/CHANGELOG.md
         SOURCE_CHANGED: ${{ steps.source-change-check.outputs.files_changed }}
         CHANGELOG_CHANGED: ${{ steps.changelog-change-check.outputs.files_changed }}
       run: |-
