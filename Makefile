@@ -13,7 +13,7 @@ $(VENV_LOCATION):
 			python -m venv --clear $@,$\
 			$(error Unable to determine a way to invoke python to create a venv)))
 
-$(foreach exec,pytest coverage,$(VENV_LOCATION)/bin/$(exec)): $(VENV_LOCATION)
+$(foreach exec,pytest coverage pylint,$(VENV_LOCATION)/bin/$(exec)): $(VENV_LOCATION)
 	$</bin/python -m pip install -e .[test]
 
 .PHONY: test
@@ -23,3 +23,7 @@ test: $(VENV_LOCATION)/bin/pytest ## run unit tests
 cover: $(VENV_LOCATION)/bin/coverage ## run unit tests and generate a coverage report
 	$< run -m pytest
 	$< html --directory $@
+
+.PHONY: lint
+lint: $(VENV_LOCATION)/bin/pylint
+	$< src

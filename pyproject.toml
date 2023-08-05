@@ -36,10 +36,14 @@ version = { attr = "changelog.__version__" }
 
 [project.optional-dependencies]
 test = [
-  "pytest",
   "coverage",
+  "flake8",
+  "pytest",
   "pytest-xdist"
 ]
+
+[tool.setuptools.package-dir]
+changelog = "src"
 
 [tool.pytest.ini_options]
 log_cli_level = "info"
@@ -49,5 +53,12 @@ testpaths = [ "test" ]
 branch = true
 source_pkgs = [ "changelog" ]
 
-[tool.setuptools.package-dir]
-changelog = "src"
+[tool.pylint.main]
+recursive = true
+good-names = [ "e", "fp" ]
+
+[tool.pylint."messages control"]
+disable = [ "too-many-branches", "too-many-statements" ]
+
+[tool.pylint.format]
+max-line-length = 110

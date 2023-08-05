@@ -4,9 +4,9 @@ __version__ = '0.0.3'
 
 import re
 from datetime import date
-from semver import Version
 from typing import ( Optional, Any )
 from io import ( IOBase, StringIO )
+from semver import Version
 
 class ChangelogParsingError( Exception ):
     @property
@@ -49,9 +49,9 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
                 line = line.decode( encoding )
             except Exception as e:
                 raise ChangelogParsingError(
-                    msg = f'Unable to decode line using encoding, "{ encoding }"; { e }',
+                    msg = f'Unable to decode line using encoding, "{ encoding }"',
                     line_number = line_no
-                )
+                ) from e
         if isinstance( line, str ):
             line = line.removesuffix( '\n' )
         else:
@@ -95,10 +95,10 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
                     changes[ -1 ][ "date" ] = date.fromisoformat( change_date )
                 except Exception as e:
                     raise ChangelogParsingError(
-                        msg = f'Unable to parse changelog entry date, "{ change_date }"; { e }',
+                        msg = f'Unable to parse changelog entry date, "{ change_date }"',
                         line_number = line_no,
                         column_number = len( line + sep ) + 1
-                    )
+                    ) from e
 
             if line.rstrip() != line:
                 raise ChangelogParsingError(
@@ -123,7 +123,11 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
                 try:
                     changes[ -1 ][ "version" ] = Version.parse( line )
                 except Exception as e:
-                    raise ChangelogParsingError( f'Failed parsing semver version, "{ line }"; { e }', line_no, 5 )
+                    raise ChangelogParsingError(
+                        msg = f'Failed parsing semver version, "{ line }"',
+                        line_number = line_no,
+                        column_number = 5
+                    ) from e
 
         elif not changes:
             continue
@@ -155,10 +159,10 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
                     version = Version.parse( match.group( 1 ) )
                 except Exception as e:
                     raise ChangelogParsingError(
-                        msg = f'Failed parsing semver version, "{ match.group( 1 ) }"; { e }',
+                        msg = f'Failed parsing semver version, "{ match.group( 1 ) }"',
                         line_number = line_no,
                         column_number = 2
-                    )
+                    ) from e
 
             for change in changes:
                 if isinstance( change[ "version" ], str ) and isinstance( version, str ):
@@ -182,7 +186,7 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
 
         elif in_compare_urls:
             raise ChangelogParsingError(
-                f'After compare URL definitions have started, no other line types are allowed',
+                'After compare URL definitions have started, no other line types are allowed',
                 line_number = line_no
             )
 
@@ -202,6 +206,13 @@ def loads( input: str )-> list[ dict[ str, Any ] ]:
     :return: a list of dictionaries with changelog data (see README.md for structure)
     """
     return load( StringIO( input ) )
+
+def dump( obj: list[ dict[ str, Any ] ], fp: IOBase, encoding: str = 'utf-8' )-> None:
+
+    ""
+
+def dumps( obj: list[ dict[ str, Any ] ], encoding: str = 'utf-8' )-> str:
+    return ""
 
 
 __all__ = [
