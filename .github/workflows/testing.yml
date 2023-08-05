@@ -49,12 +49,13 @@ jobs:
         elif 90 <= $percent and $percent < 100 then "33ff00"
         else "00FF00" end ) as $color |
         "url=https://img.shields.io/badge/\(
-            "pylint score-\( $percent * 10 | round / 10 )-\( $color )"
+            "PyLint Score-\( $percent * 10 | round / 10 )-\( $color )"
           | @uri)"
         ' >> "$GITHUB_OUTPUT"
     - id: find-comment
       uses: peter-evans/find-comment@v2
       with:
+        repository: ${{ github.event.pull_request.base.repo.full_name }}
         issue-number: ${{ github.event.pull_request.number }}
         comment-author: github-actions
         body-includes: >-
@@ -66,4 +67,7 @@ jobs:
         edit-mode: replace
         body: |-
           <!-- PyLint Comment: ${{ github.workflow }} -->
-          [![badge](${{ steps.pylint-badge.outputs.url }})](${{ github.event.pull_request.url }})
+          [![badge](${{ steps.pylint-badge.outputs.url }})](${{ format( '{0}/pull/{1}/files',
+            github.repositoryUrl,
+            github.event.pull_request.number
+          ) }})
