@@ -27,7 +27,7 @@ jobs:
     - id: changelog-change-check
       shell: bash
       run: >-
-        gh pr diff --name-only ${{ github.event.pull_request.number }} | grep --quiet ^src/
+        gh pr diff --name-only ${{ github.event.pull_request.number }} | grep --quiet ^CHANGELOG.md$
         && echo 'files_changed=true' >> "$GITHUB_OUTPUT" || echo 'files_changed=false' >> "$GITHUB_OUTPUT"
     - uses: actions/checkout@v3
       with:
