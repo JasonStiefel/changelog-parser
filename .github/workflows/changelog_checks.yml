@@ -20,15 +20,15 @@ jobs:
       with:
         path: head
     - id: source-change-check
-      uses: tj-actions/verify-changed-files@v16
-      with:
-        files: |-
-          head/pyproject.toml
-          head/src/**
+      shell: bash
+      run: >-
+        gh pr diff --name-only ${{ github.event.pull_request.number }} | grep --quiet ^src/
+        && echo 'files_changed=true' >> "$GITHUB_OUTPUT" || && echo 'files_changed=false' >> "$GITHUB_OUTPUT"
     - id: changelog-change-check
-      uses: tj-actions/verify-changed-files@v16
-      with:
-        files: head/CHANGELOG.md
+      shell: bash
+      run: >-
+        gh pr diff --name-only ${{ github.event.pull_request.number }} | grep --quiet ^src/
+        && echo 'files_changed=true' >> "$GITHUB_OUTPUT" || && echo 'files_changed=false' >> "$GITHUB_OUTPUT"
     - uses: actions/checkout@v3
       with:
         repository: ${{ github.event.pull_request.base.repo.full_name }}
