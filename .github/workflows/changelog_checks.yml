@@ -24,7 +24,7 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: >-
-        gh pr list --json number,files --jq '
+        gh pr list --repo ${{ github.repository }} --json number,files --jq '
           if any( .number == ${{ github.event.pull_request.number }} ) | not then error(
             "\n::error title=\"Pull Request Not Found\"::Unable to find files for pull request " +
             "#${{ github.event.pull_request.number }}"
