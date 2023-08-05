@@ -58,7 +58,7 @@ jobs:
         gh pr view --repo ${{ github.event.pull_request.base.repo.full_name }}
         --json comments --jq '.comments |
           map( select( .body | startswith( "<!-- PyLint Comment: Unit Testing -->" ) ) ) |
-          "comment-id=\( .[-1].id )"
+          "comment-id=\( .[ -1 ].url | split( "#issuecomment-" )[ 1 ] )"
         ' ${{ github.event.pull_request.number }} >> "$GITHUB_OUTPUT"
     - uses: peter-evans/create-or-update-comment@v3
       with:
@@ -67,4 +67,4 @@ jobs:
         edit-mode: replace
         body: |-
           <!-- PyLint Comment: ${{ github.workflow }} -->
-          [![badge](${{ steps.pylint-badge.outputs.url }})](${{ github.event.pull_request.html_url }})
+          [![badge](${{ steps.pylint-badge.outputs.url }})](${{ github.event.pull_request.html_url }}/files)
