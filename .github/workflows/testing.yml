@@ -66,4 +66,4 @@ jobs:
         edit-mode: replace
         body: |-
           <!-- PyLint Comment: ${{ github.workflow }} -->
-          [![badge](${{ steps.pylint-badge.outputs.url }})])(${{ github.event.pull_request.diff_url }})
+          [![badge](${{ steps.pylint-badge.outputs.url }})](${{ github.event.pull_request.url }})
