@@ -14,6 +14,9 @@ jobs:
       pull-requests: write
     steps:
     - uses: actions/checkout@v3
+      with:
+        repository: ${{ github.event.pull_request.head.repo.full_name }}
+        ref: ${{ github.event.pull_request.head.ref }}
     - uses: actions/setup-python@v4
       with:
         python-version: '3.11'
@@ -64,6 +67,7 @@ jobs:
       with:
         issue-number: ${{ github.event.pull_request.number }}
         comment-id: ${{ steps.find-comment.outputs.comment-id }}
+        repository: ${{ github.event.pull_request.base.repo.full_name }}
         edit-mode: replace
         body: |-
           <!-- PyLint Comment: ${{ github.workflow }} -->
