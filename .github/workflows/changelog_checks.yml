@@ -3,9 +3,6 @@ on:
   pull_request:
     branches:
     - main
-    paths:
-    - src/**
-    - pyproject.toml
     types:
     - opened
     - synchronize
@@ -16,20 +13,6 @@ jobs:
   Build-and-Test:
     name: Build and Test
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    - run: pip install -e .[test]
-    - run: coverage run -m pytest --junitxml=pytest.xml
-    - run: coverage xml
-    - uses: MishaKav/pytest-coverage-comment@main
-      with:
-        pytest-xml-coverage-path: ./coverage.xml
-        junitxml-path: ./pytest.xml
   Check-Changelog-Project-Versions:
     name: Changelog and Project Versions Match
     runs-on: ubuntu-latest
@@ -37,20 +20,33 @@ jobs:
       ! github.event.pull_request.draft
     steps:
     - uses: actions/checkout@v3
+    - id: source-change-check
+      uses: tj-actions/verify-changed-files@v16
       with:
-        path: head
+        files: |-
+          pyproject.toml
+          src/**
+    - id: changelog-change-check
+      uses: tj-actions/verify-changed-files@v16
+      with:
+        files: CHANGELOG.md
     - uses: actions/checkout@v3
       with:
         repository: ${{ github.event.pull_request.base.repo.full_name }}
         ref: ${{ github.base_ref }}
-        path: base
+        path: ${{ runner.temp }}/base
+        sparse-checkout: CHANGELOG.md
     - uses: actions/setup-python@v4
       with:
         python-version: '3.11'
-    - run: pip install ./head
+    - run: pip install .
     - shell: python
+      env:
+        BASE_CHANGELOG_PATH: ${{ runner.temp }}/base/CHANGELOG.md
+        SOURCE_CHANGED: ${{ steps.source-change-check.outputs.files_changed }}
+        CHANGELOG_CHANGED: ${{ steps.changelog-change-check.outputs.files_changed }}
       run: |-
-        import changelog, semver, sys
+        import changelog, semver, sys, os
         from typing import Sequence
 
         def error(
@@ -78,13 +74,13 @@ jobs:
 
         def main( cli_args: Sequence[ str ] )-> None:
           try:
-            with open( "head/CHANGELOG.md", "r" ) as fp:
+            with open( "CHANGELOG.md", "r" ) as fp:
               head_changes = changelog.load( fp )
           except changelog.ChangelogParsingError as e:
             error( msg = str( e ), file = "CHANGELOG.md", line = e.line_number, col = e.column_number )
 
           try:
-            with open( "base/CHANGELOG.md", "r" ) as fp:
+            with open( os.environ[ "BASE_CHANGELOG_PATH" ], "r" ) as fp:
               base_changes = changelog.load( fp )
           except Exception as e:
             error( msg = f'{ type( e ).__name__ }: { e }', title = 'Error Loading "CHANGELOG.md" from Base' )
@@ -113,7 +109,7 @@ jobs:
               title = 'Version Mismatch'
             )
           
-          if 1 < len( head_changes ):
+          if os.environ[ "SOURCE_CHANGED" ] == 'true' and 1 < len( head_changes ):
             last_version = head_changes[ 1 ][ "version" ]
             incremented = ( last_version.bump_major(), last_version.bump_minor(), last_version.bump_patch() )
             if head_changes[ 0 ][ "version" ] not in incremented:
@@ -123,16 +119,16 @@ jobs:
                 title = '"CHANGELOG.md" Version Not Incremented'
               )
 
-          if base_changes:
+          if os.environ[ "SOURCE_CHANGED" ] == 'false' and os.environ[ "CHANGELOG_CHANGED" ] == 'true':
+            error(
+              'New changes should only be added to "CHANGELOG.md" if source code is updated',
+              title = '"CHANGELOG.md" Version Should Not Be Incremented'
+            )
 
-            if head_changes[ 0 ][ "version" ] == base_changes[ 0 ][ "version" ]:
-              error(
-                'A new version with an incremented semver version is required in "CHANGELOG.md"',
-                title = "New Version Required"
-              )
-            
-            if (  ( change[ "version" ] for change in head_changes[ 1 : ] )
-                != ( change[ "version" ] for change in base_changes ) ):
+          if base_changes:
+              if (  ( change[ "version" ] for change in head_changes[ 1 : ] )
+                  != ( change[ "version" ] for change in base_changes )
+                ):
               error(
                 'Previously released changelog versions are immutable',
                 title = "Previously Released Version Changed"

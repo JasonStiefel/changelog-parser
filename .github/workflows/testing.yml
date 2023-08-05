@@ -1,0 +1,27 @@
+name: Pull Request Checks
+on:
+  pull_request:
+    branches:
+    - main
+    paths:
+    - src/**
+    - pyproject.toml
+
+jobs:
+  Build-and-Test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - run: pip install -e .[test]
+    - run: coverage run -m pytest --junitxml=pytest.xml
+    - run: coverage xml
+    - uses: MishaKav/pytest-coverage-comment@main
+      with:
+        pytest-xml-coverage-path: ./coverage.xml
+        junitxml-path: ./pytest.xml
