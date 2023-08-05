@@ -17,30 +17,31 @@ jobs:
       ! github.event.pull_request.draft
     steps:
     - uses: actions/checkout@v3
+      with:
+        path: head
     - id: source-change-check
       uses: tj-actions/verify-changed-files@v16
       with:
         files: |-
-          pyproject.toml
-          src/**
+          head/pyproject.toml
+          head/src/**
     - id: changelog-change-check
       uses: tj-actions/verify-changed-files@v16
       with:
-        files: CHANGELOG.md
+        files: head/CHANGELOG.md
     - uses: actions/checkout@v3
       with:
         repository: ${{ github.event.pull_request.base.repo.full_name }}
         ref: ${{ github.base_ref }}
-        path: checked-out-base-repository
+        path: base
         sparse-checkout: CHANGELOG.md
     - uses: actions/setup-python@v4
       with:
         python-version: '3.11'
     - shell: bash
-      run: pip install .
+      run: pip install ./head
     - shell: python
       env:
-        BASE_CHANGELOG_PATH: checked-out-base-repository/CHANGELOG.md
         SOURCE_CHANGED: ${{ steps.source-change-check.outputs.files_changed }}
         CHANGELOG_CHANGED: ${{ steps.changelog-change-check.outputs.files_changed }}
       run: |-
@@ -72,13 +73,13 @@ jobs:
 
         def main( cli_args: Sequence[ str ] )-> None:
           try:
-            with open( "CHANGELOG.md", "r" ) as fp:
+            with open( "head/CHANGELOG.md", "r" ) as fp:
               head_changes = changelog.load( fp )
           except changelog.ChangelogParsingError as e:
             error( msg = str( e ), file = "CHANGELOG.md", line = e.line_number, col = e.column_number )
 
           try:
-            with open( os.environ[ "BASE_CHANGELOG_PATH" ], "r" ) as fp:
+            with open( "head/CHANGELOG.md", "r" ) as fp:
               base_changes = changelog.load( fp )
           except Exception as e:
             error( msg = f'{ type( e ).__name__ }: { e }', title = 'Error Loading "CHANGELOG.md" from Base' )
