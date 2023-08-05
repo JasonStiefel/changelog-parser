@@ -16,11 +16,7 @@ jobs:
     if: >-
       ! github.event.pull_request.draft
     steps:
-    - uses: actions/checkout@v3
-      with:
-        repository: ${{ github.event.pull_request.head.repo.full_name }}
-        ref: ${{ github.event.pull_request.head.ref }}
-        path: head
+    # Gather Pull Request Change Information
     - id: change-check
       shell: bash
       env:
@@ -34,12 +30,21 @@ jobs:
           "changelog-changed=\( any( .path == "CHANGELOG.md" ) )",
           "source-changed=\( any( .path | startswith( "src/" ) ) )"
         ' >> "$GITHUB_OUTPUT"
+
+    # Checkout Applicable Source Code
+    - uses: actions/checkout@v3
+      with:
+        repository: ${{ github.event.pull_request.head.repo.full_name }}
+        ref: ${{ github.event.pull_request.head.ref }}
+        path: head
     - uses: actions/checkout@v3
       with:
         repository: ${{ github.event.pull_request.base.repo.full_name }}
         ref: ${{ github.event.pull_request.base.ref }}
         path: base
         sparse-checkout: CHANGELOG.md
+
+    # Run Checks to Ensure Changelog is Managed Correctly
     - uses: actions/setup-python@v4
       with:
         python-version: '3.11'

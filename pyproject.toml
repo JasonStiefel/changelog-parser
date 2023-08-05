@@ -37,7 +37,7 @@ version = { attr = "changelog.__version__" }
 [project.optional-dependencies]
 test = [
   "coverage",
-  "flake8",
+  "pylint",
   "pytest",
   "pytest-xdist"
 ]

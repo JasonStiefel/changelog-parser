@@ -207,19 +207,49 @@ def loads( input: str )-> list[ dict[ str, Any ] ]:
     """
     return load( StringIO( input ) )
 
-def dump( obj: list[ dict[ str, Any ] ], fp: IOBase, encoding: str = 'utf-8' )-> None:
+default_header = """
+# Changelog
 
-    ""
+All notable changes to this project will be documented in this file.
 
-def dumps( obj: list[ dict[ str, Any ] ], encoding: str = 'utf-8' )-> str:
-    return ""
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+""".strip()
 
+def dump(   obj: list[ dict[ str, Any ] ],
+            fp: IOBase,
+            header: str = default_header,
+            encoding: str = 'utf-8'
+        )-> None:
+    """
+    Format and write changelog data to a stream
+
+    :param obj: the changelog data to format and write (see README.md for structure)
+    :param fp: stream to write the changelog data to
+    :param header: head text to add before changelog data
+    :param encoding: if the stream expects binary data, decode string data with this encoding
+    """
+
+def dumps( obj: list[ dict[ str, Any ] ], header: str = default_header )-> str:
+    """
+    Format and write changelog data to a string
+
+    :param obj: the changelog data to format and write (see README.md for structure)
+    :param header: head text to add before changelog data
+    :return: the changelog file as a string
+    """
+    stream = StringIO()
+    dump( obj, stream, header = header )
+    stream.seek( 0 )
+    return stream.read()
 
 __all__ = [
     '__version__',
     'ChangelogParsingError',
     'load',
-    'loads'
+    'loads',
+    'dump',
+    'dumps'
 ]
 
 def __dir__() -> list[str]:
