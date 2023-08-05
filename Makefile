@@ -27,4 +27,4 @@ cover: $(VENV_LOCATION)/bin/coverage .coverage ## run unit tests and generate a 
 
 .PHONY: lint
 lint: $(VENV_LOCATION)/bin/pylint ## lint the source code
-	$< src
+	$< src --output-format colorized
