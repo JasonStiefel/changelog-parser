@@ -19,16 +19,17 @@ jobs:
     - uses: actions/checkout@v3
       with:
         path: head
-    - id: source-change-check
+    - id: change-check
       shell: bash
       run: >-
-        gh pr diff --name-only ${{ github.event.pull_request.number }} | grep --quiet ^src/
-        && echo 'files_changed=true' >> "$GITHUB_OUTPUT" || echo 'files_changed=false' >> "$GITHUB_OUTPUT"
-    - id: changelog-change-check
-      shell: bash
-      run: >-
-        gh pr diff --name-only ${{ github.event.pull_request.number }} | grep --quiet ^CHANGELOG.md$
-        && echo 'files_changed=true' >> "$GITHUB_OUTPUT" || echo 'files_changed=false' >> "$GITHUB_OUTPUT"
+        gh pr list --json number,files --jq '
+          if any( .number == ${{ github.event.pull_request.number }} ) | not then error(
+            "\n::error title=\"Pull Request Not Found\"::Unable to find files for pull request " +
+            "#${{ github.event.pull_request.number }}"
+          ) else map( select( .number == ${{ github.event.pull_request.number }} ).files )[] end |
+          "changelog-changed=\( any( .path == "CHANGELOG.md" ) )",
+          "source-changed=\( any( .path | startswith( "src/" ) ) )"
+        ' >> "$GITHUB_OUTPUT"
     - uses: actions/checkout@v3
       with:
         repository: ${{ github.event.pull_request.base.repo.full_name }}
@@ -42,8 +43,8 @@ jobs:
       run: pip install ./head
     - shell: python
       env:
-        SOURCE_CHANGED: ${{ steps.source-change-check.outputs.files_changed }}
-        CHANGELOG_CHANGED: ${{ steps.changelog-change-check.outputs.files_changed }}
+        SOURCE_CHANGED: ${{ steps.change-check.outputs.source-changed }}
+        CHANGELOG_CHANGED: ${{ steps.change-check.outputs.changelog-changed }}
       run: |-
         import changelog, semver, sys, os
         from typing import Sequence
