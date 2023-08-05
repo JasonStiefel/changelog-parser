@@ -1,4 +1,4 @@
-name: Pull Request Checks
+name: Unit Testing
 on:
   pull_request:
     branches:
@@ -8,8 +8,8 @@ on:
     - pyproject.toml
 
 jobs:
-  Build-and-Test:
-    name: Build and Test
+  Test:
+    name: Install and Test
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
