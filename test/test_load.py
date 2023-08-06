@@ -117,7 +117,7 @@ def test_non_utf_8_input_object( non_utf8_stream ):
         pytest.fail( "Loading non-utf-8 stream did not raise an exception" )
 
 def test_save_yanked_version():
-    expected = changelog.default_header + "\n\n## [Unreleased] [YANKED]\n"
+    expected = changelog.DEFAULT_HEADER + "\n\n## [Unreleased] [YANKED]\n"
     assert changelog.dumps( [ { "version": "Unreleased", "yanked": True } ] ) == expected
 
 @pytest.mark.parametrize(

@@ -217,7 +217,7 @@ def loads( s: str )-> list[ dict[ str, Any ] ]:
     """
     return load( StringIO( s ) )
 
-default_header = """
+DEFAULT_HEADER = """
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -228,7 +228,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 def dump(   obj: list[ dict[ str, Any ] ],
             fp: IOBase,
-            header: str = default_header,
+            header: str = DEFAULT_HEADER,
             encoding: str = 'utf-8'
         )-> None:
     """
@@ -265,7 +265,7 @@ def dump(   obj: list[ dict[ str, Any ] ],
         if "compare_url" in change:
             fp.writelines( ( encode( f'[{ change[ "version" ] }]: { change[ "compare_url" ] }\n' ), ) )
 
-def dumps( obj: list[ dict[ str, Any ] ], header: str = default_header )-> str:
+def dumps( obj: list[ dict[ str, Any ] ], header: str = DEFAULT_HEADER )-> str:
     """
     Format and write changelog data to a string
 

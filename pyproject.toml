@@ -55,7 +55,7 @@ source_pkgs = [ "changelog" ]
 
 [tool.pylint.main]
 recursive = true
-good-names = [ "e", "fp" ]
+good-names = [ "e", "s", "fp" ]
 fail-on = [ "error" ]
 fail-under = 9
 
