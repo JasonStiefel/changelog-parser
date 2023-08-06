@@ -229,6 +229,7 @@ def dump(   obj: list[ dict[ str, Any ] ],
     :param header: head text to add before changelog data
     :param encoding: if the stream expects binary data, decode string data with this encoding
     """
+    fp.write( header + ( "\n" * 2 ) )
 
 def dumps( obj: list[ dict[ str, Any ] ], header: str = default_header )-> str:
     """
