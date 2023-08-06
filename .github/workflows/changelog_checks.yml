@@ -99,7 +99,7 @@ jobs:
             error( msg = str( e ), file = "CHANGELOG.md", line = e.line_number, col = e.column_number )
 
           try:
-            with open( "head/CHANGELOG.md", "r" ) as fp:
+            with open( "base/CHANGELOG.md", "r" ) as fp:
               base_changes = changelog.load( fp )
           except Exception as e:
             error( msg = f'{ type( e ).__name__ }: { e }', title = 'Error Loading "CHANGELOG.md" from Base' )
@@ -148,8 +148,6 @@ jobs:
             if (  [ change[ "version" ] for change in head_changes[ 1 : ] ]
                 != [ change[ "version" ] for change in base_changes ]
               ):
-              print( [ change[ "version" ] for change in head_changes[ 1 : ] ] )
-              print( [ change[ "version" ] for change in base_changes ] )
               error(
                 'Previously released changelog versions are immutable',
                 title = "Previously Released Version Changed"
