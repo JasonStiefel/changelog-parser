@@ -1,14 +1,24 @@
 # SPDX-License-Identifier: MIT
 
-__version__ = '0.0.3'
+"""
+A tool for managing changelog formatted data and objects (see
+keepachangelog.com). In Python, the data is managed as a list of
+dictionaries (see README.md for the dictionaries' structure)
+"""
+
+__version__ = '0.0.4'
 
 import re
+import textwrap
 from datetime import date
-from semver import Version
 from typing import ( Optional, Any )
-from io import ( IOBase, StringIO )
+from io import ( IOBase, TextIOBase, StringIO )
+from semver import Version
 
 class ChangelogParsingError( Exception ):
+    """
+    An error used when changelog data isn't formatted as the parser expects
+    """
     @property
     def line_number( self )-> Optional[ int ]:
         """
@@ -49,9 +59,9 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
                 line = line.decode( encoding )
             except Exception as e:
                 raise ChangelogParsingError(
-                    msg = f'Unable to decode line using encoding, "{ encoding }"; { e }',
+                    msg = f'Unable to decode line using encoding, "{ encoding }"',
                     line_number = line_no
-                )
+                ) from e
         if isinstance( line, str ):
             line = line.removesuffix( '\n' )
         else:
@@ -95,10 +105,10 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
                     changes[ -1 ][ "date" ] = date.fromisoformat( change_date )
                 except Exception as e:
                     raise ChangelogParsingError(
-                        msg = f'Unable to parse changelog entry date, "{ change_date }"; { e }',
+                        msg = f'Unable to parse changelog entry date, "{ change_date }"',
                         line_number = line_no,
                         column_number = len( line + sep ) + 1
-                    )
+                    ) from e
 
             if line.rstrip() != line:
                 raise ChangelogParsingError(
@@ -117,10 +127,17 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
                     column_number = 4 if not line.startswith( "[" ) else 4 + len( line )
                 )
             line = line.removeprefix( "[" ).removesuffix( "]" )
-            try:
-                changes[ -1 ][ "version" ] = line if line.lower() == "unreleased" else Version.parse( line )
-            except Exception as e:
-                raise ChangelogParsingError( f'Failed parsing semver version, "{ line }"; { e }', line_no, 5 )
+            if line.lower() == "unreleased":
+                changes[ -1 ][ "version" ] = line.capitalize()
+            else:
+                try:
+                    changes[ -1 ][ "version" ] = Version.parse( line )
+                except Exception as e:
+                    raise ChangelogParsingError(
+                        msg = f'Failed parsing semver version, "{ line }"',
+                        line_number = line_no,
+                        column_number = 5
+                    ) from e
 
         elif not changes:
             continue
@@ -146,20 +163,20 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
 
         elif ( match := re.fullmatch( r'\[([^\]]+)\]: (https?:\/\/.*)', line ) ):
             if match.group( 1 ).lower() == "unreleased":
-                version = match.group( 1 )
+                version = match.group( 1 ).capitalize()
             else:
                 try:
                     version = Version.parse( match.group( 1 ) )
                 except Exception as e:
                     raise ChangelogParsingError(
-                        msg = f'Failed parsing semver version, "{ match.group( 1 ) }"; { e }',
+                        msg = f'Failed parsing semver version, "{ match.group( 1 ) }"',
                         line_number = line_no,
                         column_number = 2
-                    )
+                    ) from e
 
             for change in changes:
                 if isinstance( change[ "version" ], str ) and isinstance( version, str ):
-                    if change[ "version" ].lower() == version.lower():
+                    if change[ "version" ] == version:
                         break
                 if isinstance( change[ "version" ], Version ) and isinstance( version, Version ):
                     if change[ "version" ] == version:
@@ -179,7 +196,7 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
 
         elif in_compare_urls:
             raise ChangelogParsingError(
-                f'After compare URL definitions have started, no other line types are allowed',
+                'After compare URL definitions have started, no other line types are allowed',
                 line_number = line_no
             )
 
@@ -191,21 +208,83 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
 
     return changes
 
-def loads( input: str )-> list[ dict[ str, Any ] ]:
+def loads( s: str )-> list[ dict[ str, Any ] ]:
     """
     Parse data from a changelog provided as a string
 
     :param input: the string parse as a changelog
     :return: a list of dictionaries with changelog data (see README.md for structure)
     """
-    return load( StringIO( input ) )
+    return load( StringIO( s ) )
 
+DEFAULT_HEADER = """
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+""".strip()
+
+def dump(   obj: list[ dict[ str, Any ] ],
+            fp: IOBase,
+            header: str = DEFAULT_HEADER,
+            encoding: str = 'utf-8'
+        )-> None:
+    """
+    Format and write changelog data to a stream
+
+    :param obj: the changelog data to format and write (see README.md for structure)
+    :param fp: stream to write the changelog data to
+    :param header: head text to add before changelog data
+    :param encoding: if the stream expects binary data, decode string data with this encoding
+    """
+    if not isinstance( obj, list ) or any( not isinstance( i, dict ) for i in obj ):
+        raise ValueError( '"obj" parameter must be a list of dictionaries' )
+    encode = lambda i : i if isinstance( fp, TextIOBase ) else i.encode( encoding )
+    fp.writelines( encode( header + "\n" ).splitlines( keepends = True ) )
+    for number, change in enumerate( obj, start = 1 ):
+        if "version" not in change:
+            raise ValueError( f'Changelog entry #{ number } was missing a "version" key' )
+        line = f'## [{ change[ "version" ] }]'
+        if isinstance( change.get( "date" ), date ):
+            line += " - " + change[ "date" ].isoformat()
+        if change.get( "yanked", False ):
+            line += " [YANKED]"
+        fp.writelines( ( encode( i ) for i in ( "\n", line + "\n" ) ) )
+        for key in change.keys():
+            if key in ( 'added', 'changed', 'deprecated', 'removed', 'fixed', 'security' ):
+                fp.writelines( ( encode( i ) for i in ( "\n", f'### { key.capitalize() }' + "\n" ) ) )
+                if isinstance( change[ key ], list ):
+                    fp.writelines( ( encode( i ) for i in ( "\n" ) ) )
+                    for item in change[ key ]:
+                        fp.writelines( ( encode( "-" + textwrap.indent( item, "  " )[ 1 : ] + "\n" ), ) )
+    if any( "compare_url" in change for change in obj ):
+        fp.writelines( ( encode( i ) for i in ( "\n" ) ) )
+    for change in obj:
+        if "compare_url" in change:
+            fp.writelines( ( encode( f'[{ change[ "version" ] }]: { change[ "compare_url" ] }\n' ), ) )
+
+def dumps( obj: list[ dict[ str, Any ] ], header: str = DEFAULT_HEADER )-> str:
+    """
+    Format and write changelog data to a string
+
+    :param obj: the changelog data to format and write (see README.md for structure)
+    :param header: head text to add before changelog data
+    :return: the changelog file as a string
+    """
+    stream = StringIO()
+    dump( obj, stream, header = header )
+    stream.seek( 0 )
+    return stream.read()
 
 __all__ = [
     '__version__',
     'ChangelogParsingError',
     'load',
-    'loads'
+    'loads',
+    'dump',
+    'dumps'
 ]
 
 def __dir__() -> list[str]:

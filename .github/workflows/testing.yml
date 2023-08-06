@@ -1,0 +1,79 @@
+name: Unit Testing
+on:
+  pull_request:
+    branches: main
+    paths:
+    - src/**
+    - pyproject.toml
+
+jobs:
+  Test:
+    name: Install and Test
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        repository: ${{ github.event.pull_request.head.repo.full_name }}
+        ref: ${{ github.event.pull_request.head.ref }}
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - run: pip install -e .[test]
+    - run: coverage run -m pytest --junitxml=pytest.xml
+    - run: coverage xml
+    - uses: MishaKav/pytest-coverage-comment@main
+      if: always()
+      with:
+        pytest-xml-coverage-path: ./coverage.xml
+        junitxml-path: ./pytest.xml
+    - id: pylint
+      if: always()
+      shell: bash
+      run: >-
+        pylint src --msg-template
+        '::{category} title=pylint,file={path},line={line},lineEnd={end_line},col={column},endColumn={end_column}::[{msg_id}] {msg} ({symbol})'
+        | sed -r '/^::(error|warning)/! s/^::(\S+) title=pylint/::notice title=pylint - \1/g'
+        | tee >(sed -rn 's/^Your code has been rated at (\S+).*$/score=\1/p' >> "$GITHUB_OUTPUT")
+    - id: pylint-badge
+      if: always() && steps.pylint.outputs.score
+      shell: bash
+      run: |-
+        printf -- '${{ steps.pylint.outputs.score }}' | jq -sRMr '
+        ( split("/") | map(tonumber) | .[0] / .[1] * 100 ) as $percent |
+        ( if $percent < 50 then "FF0000"
+        elif 50 <= $percent and $percent < 55 then "FF3300"
+        elif 55 <= $percent and $percent < 60 then "ff6600"
+        elif 60 <= $percent and $percent < 65 then "ff9900"
+        elif 65 <= $percent and $percent < 70 then "FFCC00"
+        elif 70 <= $percent and $percent < 75 then "FFFF00"
+        elif 75 <= $percent and $percent < 80 then "ccff00"
+        elif 80 <= $percent and $percent < 85 then "99ff00"
+        elif 85 <= $percent and $percent < 90 then "ff6600"
+        elif 90 <= $percent and $percent < 95 then "66ff00"
+        elif 95 <= $percent and $percent < 100 then "33ff00"
+        else "00FF00" end ) as $color |
+        "url=https://img.shields.io/badge/\( "PyLint Score-\( . )-\( $color )" | @uri)"
+        ' >> "$GITHUB_OUTPUT"
+    - id: find-comment
+      if: always() && steps.pylint.outputs.score
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: >-
+        gh pr view --repo ${{ github.event.pull_request.base.repo.full_name }}
+        --json comments --jq '.comments |
+          map( select( .body | startswith( "<!-- PyLint Comment: Unit Testing -->" ) ) ) |
+          "comment-id=\( .[ -1 ].url | split( "#issuecomment-" )[ 1 ] )"
+        ' ${{ github.event.pull_request.number }} >> "$GITHUB_OUTPUT"
+    - uses: peter-evans/create-or-update-comment@v3
+      if: always() && steps.pylint-badge.outcome == 'success' && steps.find-comment.outcome == 'success'
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-id: ${{ steps.find-comment.outputs.comment-id }}
+        repository: ${{ github.event.pull_request.base.repo.full_name }}
+        edit-mode: replace
+        body: |-
+          <!-- PyLint Comment: ${{ github.workflow }} -->
+          [![badge](${{ steps.pylint-badge.outputs.url }})](${{ github.event.pull_request.html_url }}/files)

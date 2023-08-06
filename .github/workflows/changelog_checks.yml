@@ -1,0 +1,157 @@
+name: Changelog Checks
+on:
+  pull_request:
+    branches: main
+    types:
+    - opened
+    - synchronize
+    - reopened
+    - ready_for_review
+
+jobs:
+  Check-Changelog-Project-Versions:
+    name: Validate
+    runs-on: ubuntu-latest
+    if: >-
+      ! github.event.pull_request.draft
+    steps:
+    # Gather Pull Request Change Information
+    - id: changelog-change-check
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |-
+        if { gh pr diff \
+            --repo ${{ github.event.pull_request.base.repo.full_name }} \
+            --name-only ${{ github.event.pull_request.number }} \
+          | grep ^CHANGELOG.md$; }
+        then echo "changed=true" >> "$GITHUB_OUTPUT"
+        else echo "changed=false" >> "$GITHUB_OUTPUT"
+        fi
+    - id: source-change-check
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |-
+        if { gh pr diff \
+            --repo ${{ github.event.pull_request.base.repo.full_name }} \
+            --name-only ${{ github.event.pull_request.number }} \
+          | grep ^src/; }
+        then echo "changed=true" >> "$GITHUB_OUTPUT"
+        else echo "changed=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    # Checkout Applicable Source Code
+    - uses: actions/checkout@v3
+      with:
+        repository: ${{ github.event.pull_request.head.repo.full_name }}
+        ref: ${{ github.event.pull_request.head.ref }}
+        path: head
+    - uses: actions/checkout@v3
+      with:
+        repository: ${{ github.event.pull_request.base.repo.full_name }}
+        ref: ${{ github.event.pull_request.base.ref }}
+        path: base
+        sparse-checkout: CHANGELOG.md
+
+    # Run Checks to Ensure Changelog is Managed Correctly
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - shell: bash
+      run: pip install ./head
+    - shell: python
+      env:
+        SOURCE_CHANGED: ${{ steps.source-change-check.outputs.changed }}
+        CHANGELOG_CHANGED: ${{ steps.changelog-change-check.outputs.changed }}
+      run: |-
+        import changelog, semver, sys, os
+        from typing import Sequence
+
+        def error(
+              msg: str,
+              *,
+              title: str | None = None,
+              file: str | None = None,
+              line: int | None = None,
+              col: int | None = None,
+              exit: bool = True
+            ):
+          details = ",".join( ( f'{ key }={ value }' for key, value in {
+            "title": title,
+            "file": file,
+            "line": line,
+            "col": col
+          }.items() if value is not None ) )
+          print(
+            f'::error{ ( " " + details ) if details else "" }::{ msg }',
+            flush = True,
+            file = sys.stderr
+          )
+          if exit:
+            sys.exit( 1 )
+
+        def main( cli_args: Sequence[ str ] )-> None:
+          try:
+            with open( "head/CHANGELOG.md", "r" ) as fp:
+              head_changes = changelog.load( fp )
+          except changelog.ChangelogParsingError as e:
+            error( msg = str( e ), file = "CHANGELOG.md", line = e.line_number, col = e.column_number )
+
+          try:
+            with open( "base/CHANGELOG.md", "r" ) as fp:
+              base_changes = changelog.load( fp )
+          except Exception as e:
+            error( msg = f'{ type( e ).__name__ }: { e }', title = 'Error Loading "CHANGELOG.md" from Base' )
+
+          if not head_changes:
+            error(
+              'A change entry is required in "CHANGELOG.md"',
+              title = "No Changelog Entry Found"
+            )
+
+          if any( not isinstance( change[ "version" ], semver.Version ) for change in head_changes ):
+            error(
+              'A version in "CHANGELOG.md" is "Unreleased", which cannot be merged',
+              title = 'Unreleased" Version Invalid'
+            )
+
+          if any( change[ "date" ] is None for change in head_changes ):
+            error(
+              'At least one record in "CHANGELOG.md" is missing a date',
+              title = 'Record Missing Date'
+            )
+
+          if head_changes[ 0 ][ "version" ] != semver.Version.parse( changelog.__version__ ):
+            error(
+              'Project version and latest version in "CHANGELOG.md" do not match',
+              title = 'Version Mismatch'
+            )
+          
+          if os.environ[ "SOURCE_CHANGED" ] == 'true' and 1 < len( head_changes ):
+            last_version = head_changes[ 1 ][ "version" ]
+            incremented = ( last_version.bump_major(), last_version.bump_minor(), last_version.bump_patch() )
+            if head_changes[ 0 ][ "version" ] not in incremented:
+              error(
+                f'Latest "CHANGELOG.md" version, "{ head_changes[ 0 ][ "version" ] }", is not a major, minor,'
+                  ' or patch incrementation of the previous version, "{ head_changes[ ` ][ "version" ] }"',
+                title = '"CHANGELOG.md" Version Not Incremented'
+              )
+
+          if os.environ[ "SOURCE_CHANGED" ] == 'false' and os.environ[ "CHANGELOG_CHANGED" ] == 'true':
+            error(
+              'New changes should only be added to "CHANGELOG.md" if source code is updated',
+              title = '"CHANGELOG.md" Version Should Not Be Incremented'
+            )
+
+          if base_changes:
+            if (  [ change[ "version" ] for change in head_changes[ 1 : ] ]
+                != [ change[ "version" ] for change in base_changes ]
+              ):
+              error(
+                'Previously released changelog versions are immutable',
+                title = "Previously Released Version Changed"
+              )
+
+        if __name__ == '__main__':
+          main( sys.argv[ 1 : ] )
