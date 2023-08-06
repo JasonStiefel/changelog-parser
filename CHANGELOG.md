@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Case insensitive "unreleased" version value to fixed case `Unreleased`
 
+### Added
+
+- `dump` and `dumps` functions
+
 ## [0.0.3] - 2023-08-01
 
 ### Fixed
