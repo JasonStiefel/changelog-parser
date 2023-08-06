@@ -37,7 +37,7 @@ jobs:
         | sed -r '/^::(error|warning)/! s/^::(\S+) title=pylint/::notice title=pylint - \1/g'
         | tee >(sed -rn 's/^Your code has been rated at (\S+).*$/score=\1/p' >> "$GITHUB_OUTPUT")
     - id: pylint-badge
-      if: steps.pylint.outputs.score
+      if: always() && steps.pylint.outputs.score
       shell: bash
       run: |-
         printf -- '${{ steps.pylint.outputs.score }}' | jq -sRMr '
@@ -57,7 +57,7 @@ jobs:
         "url=https://img.shields.io/badge/\( "PyLint Score-\( . )-\( $color )" | @uri)"
         ' >> "$GITHUB_OUTPUT"
     - id: find-comment
-      if: steps.pylint.outputs.score
+      if: always() && steps.pylint.outputs.score
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
@@ -68,7 +68,7 @@ jobs:
           "comment-id=\( .[ -1 ].url | split( "#issuecomment-" )[ 1 ] )"
         ' ${{ github.event.pull_request.number }} >> "$GITHUB_OUTPUT"
     - uses: peter-evans/create-or-update-comment@v3
-      if: steps.pylint-badge.outcome == 'success' && steps.find-comment.outcome == 'success'
+      if: always() && steps.pylint-badge.outcome == 'success' && steps.find-comment.outcome == 'success'
       with:
         issue-number: ${{ github.event.pull_request.number }}
         comment-id: ${{ steps.find-comment.outputs.comment-id }}
