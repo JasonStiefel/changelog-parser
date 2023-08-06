@@ -57,7 +57,7 @@ jobs:
         "url=https://img.shields.io/badge/\( "PyLint Score-\( . )-\( $color )" | @uri)"
         ' >> "$GITHUB_OUTPUT"
     - id: find-comment
-      if: always() && steps.pylint.outputs.score
+      if: always() && steps.pylint-badge.outcome == 'success'
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
@@ -65,7 +65,7 @@ jobs:
         gh pr view --repo ${{ github.event.pull_request.base.repo.full_name }}
         --json comments --jq '.comments |
           map( select( .body | startswith( "<!-- PyLint Comment: Unit Testing -->" ) ) ) |
-          "comment-id=\( .[ -1 ].url // "" | split( "#issuecomment-" )[ 1 : ][] // ""  )"
+          "comment-id=\( .[ -1 ].url // "" | split( "#issuecomment-" )[ 1 ] // ""  )"
         ' ${{ github.event.pull_request.number }} >> "$GITHUB_OUTPUT"
     - uses: peter-evans/create-or-update-comment@v3
       if: always() && steps.pylint-badge.outcome == 'success' && steps.find-comment.outcome == 'success'
