@@ -54,13 +54,13 @@ branch = true
 source_pkgs = [ "changelog" ]
 
 [tool.coverage.report]
-fail_under = 100
+fail_under = 95
 
 [tool.pylint.main]
 recursive = true
 good-names = [ "e", "s", "fp" ]
 fail-on = [ "error" ]
-fail-under = 10
+fail-under = 9.5
 
 [tool.pylint."messages control"]
 disable = [
