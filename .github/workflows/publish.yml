@@ -5,6 +5,8 @@ on:
     paths:
     - src/**
     - pyproject.toml
+    - README.md
+    - LICENSE
 
 jobs:
   Build-and-Publish:
