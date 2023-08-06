@@ -3,9 +3,10 @@
 __version__ = '0.0.3'
 
 import re
+import textwrap
 from datetime import date
 from typing import ( Optional, Any )
-from io import ( IOBase, StringIO )
+from io import ( IOBase, TextIOBase, StringIO )
 from semver import Version
 
 class ChangelogParsingError( Exception ):
@@ -229,7 +230,29 @@ def dump(   obj: list[ dict[ str, Any ] ],
     :param header: head text to add before changelog data
     :param encoding: if the stream expects binary data, decode string data with this encoding
     """
-    fp.write( header + ( "\n" * 2 ) )
+    encode = lambda i : i if isinstance( fp, TextIOBase ) else i.encode( encoding )
+    fp.writelines( encode( header ).splitlines( keepends = True ) )
+    for change in obj:
+        line = f'## [{ change[ "version" ] }]'
+        if isinstance( change.get( "date" ), date ):
+            line += " - " + change[ "date" ].isoformat()
+        if change.get( "yanked", False ):
+            line += " [YANKED]"
+        fp.writelines( ( encode( i ) for i in ( "\n", "\n", line + "\n" ) ) )
+        for key in ( 'added', 'changed', 'deprecated', 'removed', 'fixed', 'security' ):
+            if key in change:
+                fp.writelines( ( encode( i ) for i in ( "\n", "\n", f'### { key.capitalize() }' + "\n" ) ) )
+                if isinstance( change[ key ], list ):
+                    fp.writelines( ( encode( i ) for i in ( "\n", "\n" ) ) )
+                    for item in change[ key ]:
+                        fp.writelines( ( encode( "-" + textwrap.indent( item, "  " )[ 1 : ] ) + "\n", ) )
+    if any( "compare_url" in change for change in obj ):
+        fp.writelines( ( encode( i ) for i in ( "\n", "\n" ) ) )
+    for change in obj:
+        if "compare_url" in change:
+            fp.writelines( ( encode( f'[{ change[ "version" ] }]: { change[ "compare_url" ] }\n' ), ) )
+
+
 
 def dumps( obj: list[ dict[ str, Any ] ], header: str = default_header )-> str:
     """
