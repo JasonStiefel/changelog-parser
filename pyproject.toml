@@ -60,7 +60,7 @@ fail_under = 100
 recursive = true
 good-names = [ "e", "s", "fp" ]
 fail-on = [ "error" ]
-fail-under = 9.5
+fail-under = 10
 
 [tool.pylint."messages control"]
 disable = [
