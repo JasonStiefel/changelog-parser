@@ -19,40 +19,43 @@ Yet another python changelog parser.
    {
      "$schema": "https://json-schema.org/draft-07/schema#",
      "title": "Loaded Changelog",
-     "type": "object",
-     "properties": {
-       "version": {
-         "oneOf": [ {
-           "const": "Unreleased"
-         }, {
-           "type": "semver.Version",
-           "description": "Python object from https://pypi.org/project/semver/"
-         } ]
+     "type": "array",
+     "items": {
+       "type": "object",
+       "properties": {
+         "version": {
+           "oneOf": [ {
+             "const": "Unreleased"
+           }, {
+             "type": "semver.Version",
+             "description": "Python object from https://pypi.org/project/semver/"
+           } ]
+         },
+         "date": {
+           "oneOf": [ {
+             "const": null
+           }, {
+             "type": "datetime.date",
+             "description": "Python object from https://docs.python.org/3/library/datetime.html#date-objects; parsed using \"fromisoformat\""
+           } ]
+         },
+         "yanked": {
+           "type": "boolean"
+         },
+         "added": { "$ref": "#/$defs/change_list" },
+         "changed": { "$ref": "#/$defs/change_list" },
+         "depreciated": { "$ref": "#/$defs/change_list" },
+         "removed": { "$ref": "#/$defs/change_list" },
+         "fixed": { "$ref": "#/$defs/change_list" },
+         "security": { "$ref": "#/$defs/change_list" },
+         "compare_url": {
+           "type": "string",
+           "pattern": "^https?:\\/\\/.+"
+         }
        },
-       "date": {
-         "oneOf": [ {
-           "const": null
-         }, {
-           "type": "datetime.date",
-           "description": "Python object from https://docs.python.org/3/library/datetime.html#date-objects; parsed using \"fromisoformat\""
-         } ]
-       },
-       "yanked": {
-         "type": "boolean"
-       },
-       "added": { "$ref": "#/$defs/change_list" },
-       "changed": { "$ref": "#/$defs/change_list" },
-       "depreciated": { "$ref": "#/$defs/change_list" },
-       "removed": { "$ref": "#/$defs/change_list" },
-       "fixed": { "$ref": "#/$defs/change_list" },
-       "security": { "$ref": "#/$defs/change_list" },
-       "compare_url": {
-         "type": "string",
-         "pattern": "^https?:\\/\\/.+"
-       }
+       "required": [ "version", "date", "yanked" ],
+       "additionalProperties": false
      },
-     "required": [ "version", "date", "yanked" ],
-     "additionalProperties": false,
      "$defs": {
        "change_list": {
          "type": "array",

@@ -24,7 +24,7 @@ jobs:
         if { gh pr diff \
             --repo ${{ github.event.pull_request.base.repo.full_name }} \
             --name-only ${{ github.event.pull_request.number }} \
-          | grep ^CHANGELOG.md$; }
+          | grep -E '^CHANGELOG.md$'; }
         then echo "changed=true" >> "$GITHUB_OUTPUT"
         else echo "changed=false" >> "$GITHUB_OUTPUT"
         fi
@@ -36,7 +36,7 @@ jobs:
         if { gh pr diff \
             --repo ${{ github.event.pull_request.base.repo.full_name }} \
             --name-only ${{ github.event.pull_request.number }} \
-          | grep ^src/; }
+          | grep -E '^src/|^pyproject.toml$|^LICENSE$|^README.md$'; }
         then echo "changed=true" >> "$GITHUB_OUTPUT"
         else echo "changed=false" >> "$GITHUB_OUTPUT"
         fi
