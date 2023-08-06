@@ -51,8 +51,6 @@ def test_write( project_example_changelog_path ):
     finally:
         os.remove( path )
 
-    
-
 @pytest.mark.parametrize(
     ( "changelog_contents", "error_message", "msg_line_no", "msg_col_no" ),
     [
@@ -84,6 +82,7 @@ def test_write( project_example_changelog_path ):
         ( '## [1.1.1]\n\n[1.1.1]: https://asdf\n\n## [Unreleased]', 'After compare URL definitions have started, '
             'no other line types are allowed (at line 5)', 5, None )
     ] )
+
 def test_basic_error_line_patterns( changelog_contents, error_message, msg_line_no, msg_col_no ):
     try:
         changelog.loads( changelog_contents )
@@ -94,9 +93,6 @@ def test_basic_error_line_patterns( changelog_contents, error_message, msg_line_
         assert e.column_number == msg_col_no
     else:
         pytest.fail( "Loading CHANGELOG did not raise an exception" )
-
-def test_dir():
-    assert "__version__" in changelog.__dir__()
 
 def test_invalid_streams( numerical_stream ):
     try:
@@ -123,3 +119,6 @@ def test_non_utf_8_input_object( non_utf8_stream ):
 def test_save_yanked_version():
     expected = changelog.default_header + "\n\n## [Unreleased] [YANKED]\n"
     assert changelog.dumps( [ { "version": "Unreleased", "yanked": True } ] ) == expected
+
+def test_dir():
+    assert "__version__" in changelog.__dir__()
