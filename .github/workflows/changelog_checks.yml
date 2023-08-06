@@ -148,6 +148,8 @@ jobs:
             if (  [ change[ "version" ] for change in head_changes[ 1 : ] ]
                 != [ change[ "version" ] for change in base_changes ]
               ):
+              print( [ change[ "version" ] for change in head_changes[ 1 : ] ] )
+              print( [ change[ "version" ] for change in base_changes ] )
               error(
                 'Previously released changelog versions are immutable',
                 title = "Previously Released Version Changed"
