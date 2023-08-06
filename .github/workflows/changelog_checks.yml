@@ -24,7 +24,7 @@ jobs:
         if { gh pr diff \
             --repo ${{ github.event.pull_request.base.repo.full_name }} \
             --name-only ${{ github.event.pull_request.number }} \
-          | grep --silent ^CHANGELOG.md$; }
+          | grep ^CHANGELOG.md$; }
         then echo "changed=true" >> "$GITHUB_OUTPUT"
         else echo "changed=false" >> "$GITHUB_OUTPUT"
         fi
@@ -36,7 +36,7 @@ jobs:
         if { gh pr diff \
             --repo ${{ github.event.pull_request.base.repo.full_name }} \
             --name-only ${{ github.event.pull_request.number }} \
-          | grep --silent ^src/; }
+          | grep ^src/; }
         then echo "changed=true" >> "$GITHUB_OUTPUT"
         else echo "changed=false" >> "$GITHUB_OUTPUT"
         fi
@@ -145,8 +145,8 @@ jobs:
             )
 
           if base_changes:
-            if (  ( change[ "version" ] for change in head_changes[ 1 : ] )
-                != ( change[ "version" ] for change in base_changes )
+            if (  [ change[ "version" ] for change in head_changes[ 1 : ] ]
+                != [ change[ "version" ] for change in base_changes ]
               ):
               error(
                 'Previously released changelog versions are immutable',
