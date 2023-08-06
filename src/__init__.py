@@ -231,28 +231,26 @@ def dump(   obj: list[ dict[ str, Any ] ],
     :param encoding: if the stream expects binary data, decode string data with this encoding
     """
     encode = lambda i : i if isinstance( fp, TextIOBase ) else i.encode( encoding )
-    fp.writelines( encode( header ).splitlines( keepends = True ) )
+    fp.writelines( encode( header + "\n" ).splitlines( keepends = True ) )
     for change in obj:
         line = f'## [{ change[ "version" ] }]'
         if isinstance( change.get( "date" ), date ):
             line += " - " + change[ "date" ].isoformat()
         if change.get( "yanked", False ):
             line += " [YANKED]"
-        fp.writelines( ( encode( i ) for i in ( "\n", "\n", line + "\n" ) ) )
-        for key in ( 'added', 'changed', 'deprecated', 'removed', 'fixed', 'security' ):
-            if key in change:
-                fp.writelines( ( encode( i ) for i in ( "\n", "\n", f'### { key.capitalize() }' + "\n" ) ) )
+        fp.writelines( ( encode( i ) for i in ( "\n", line + "\n" ) ) )
+        for key in change.keys():
+            if key in ( 'added', 'changed', 'deprecated', 'removed', 'fixed', 'security' ):
+                fp.writelines( ( encode( i ) for i in ( "\n", f'### { key.capitalize() }' + "\n" ) ) )
                 if isinstance( change[ key ], list ):
-                    fp.writelines( ( encode( i ) for i in ( "\n", "\n" ) ) )
+                    fp.writelines( ( encode( i ) for i in ( "\n" ) ) )
                     for item in change[ key ]:
-                        fp.writelines( ( encode( "-" + textwrap.indent( item, "  " )[ 1 : ] ) + "\n", ) )
+                        fp.writelines( ( encode( "-" + textwrap.indent( item, "  " )[ 1 : ] + "\n" ), ) )
     if any( "compare_url" in change for change in obj ):
-        fp.writelines( ( encode( i ) for i in ( "\n", "\n" ) ) )
+        fp.writelines( ( encode( i ) for i in ( "\n" ) ) )
     for change in obj:
         if "compare_url" in change:
             fp.writelines( ( encode( f'[{ change[ "version" ] }]: { change[ "compare_url" ] }\n' ), ) )
-
-
 
 def dumps( obj: list[ dict[ str, Any ] ], header: str = default_header )-> str:
     """

@@ -1,9 +1,12 @@
+import tempfile
+import os
 import changelog
 import pytest
 import semver
+from difflib import Differ
 from datetime import date
 
-def test_example( project_example_changelog_path ):
+def test_spot_check( project_example_changelog_path ):
     with open( project_example_changelog_path, "rb" ) as fp:
         changes = changelog.load( fp )
 
@@ -21,6 +24,34 @@ def test_example( project_example_changelog_path ):
         "added": [ "Explanation of the recommended reverse chronological release ordering." ],
         "compare_url": "https://github.com/olivierlacan/keep-a-changelog/compare/v0.0.1...v0.0.2"
     }
+
+def test_write( project_example_changelog_path ):
+    with open( project_example_changelog_path, "rb" ) as fp:
+        changes = changelog.load( fp )
+
+    path, differ = tempfile.mktemp(), Differ()
+    try:
+        with open( path, 'wb' ) as fp:
+            changelog.dump( changes, fp )
+
+        with open( path, 'r' ) as fp:
+            print( fp.read() )
+
+        with open( path, 'r' ) as w_fp, open( project_example_changelog_path, 'r' ) as r_fp:
+            diffs = []
+            for line in differ.compare( w_fp.readlines(), r_fp.readlines() ):
+                if not line.startswith( "  " ):
+                    diffs.append( line )
+            assert diffs == [
+                '- [Unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v1.1.1...HEAD\n',
+                '?  ^\n',
+                '+ [unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v1.1.1...HEAD\n',
+                '?  ^\n'
+            ]
+    finally:
+        os.remove( path )
+
+    
 
 @pytest.mark.parametrize(
     ( "changelog_contents", "error_message", "msg_line_no", "msg_col_no" ),
