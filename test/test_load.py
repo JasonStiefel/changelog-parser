@@ -120,14 +120,20 @@ def test_save_yanked_version():
     expected = changelog.default_header + "\n\n## [Unreleased] [YANKED]\n"
     assert changelog.dumps( [ { "version": "Unreleased", "yanked": True } ] ) == expected
 
-def test_bad_output():
+@pytest.mark.parametrize(
+    ( "changelog_object", "error_message" ),
+    [
+        ( "asdf", '"obj" parameter must be a list of dictionaries' ),
+        ( [{}], 'Changelog entry #1 was missing a "version" key' )
+    ] )
+def test_bad_output( changelog_object, error_message ):
     try:
-        changelog.dumps( "asdf" )
+        changelog.dumps( changelog_object )
     except Exception as e:
         assert isinstance( e, ValueError )
-        assert str( e ) == '"obj" parameter must be a list of dictionaries'
+        assert str( e ) == error_message
     else:
-        pytest.fail( "Dumping a string to a string was successful" )
+        pytest.fail( f'Expected dumping the following to fail: { changelog_object }' )
 
 def test_dir():
     assert "__version__" in changelog.__dir__()

@@ -231,10 +231,12 @@ def dump(   obj: list[ dict[ str, Any ] ],
     :param encoding: if the stream expects binary data, decode string data with this encoding
     """
     if not isinstance( obj, list ) or any( not isinstance( i, dict ) for i in obj ):
-        raise ValueError( f'"obj" parameter must be a list of dictionaries' )
+        raise ValueError( '"obj" parameter must be a list of dictionaries' )
     encode = lambda i : i if isinstance( fp, TextIOBase ) else i.encode( encoding )
     fp.writelines( encode( header + "\n" ).splitlines( keepends = True ) )
-    for change in obj:
+    for number, change in enumerate( obj, start = 1 ):
+        if "version" not in change:
+            raise ValueError( f'Changelog entry #{ number } was missing a "version" key' )
         line = f'## [{ change[ "version" ] }]'
         if isinstance( change.get( "date" ), date ):
             line += " - " + change[ "date" ].isoformat()
