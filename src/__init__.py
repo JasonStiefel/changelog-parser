@@ -1,6 +1,12 @@
 # SPDX-License-Identifier: MIT
 
-__version__ = '0.0.3'
+"""
+A tool for managing changelog formatted data and objects (see
+keepachangelog.com). In Python, the data is managed as a list of
+dictionaries (see README.md for the dictionaries' structure)
+"""
+
+__version__ = '0.0.4'
 
 import re
 import textwrap
@@ -10,6 +16,9 @@ from io import ( IOBase, TextIOBase, StringIO )
 from semver import Version
 
 class ChangelogParsingError( Exception ):
+    """
+    An error used when changelog data isn't formatted as the parser expects
+    """
     @property
     def line_number( self )-> Optional[ int ]:
         """
