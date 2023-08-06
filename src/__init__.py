@@ -199,14 +199,14 @@ def load( fp: IOBase, encoding: str = 'utf-8' )-> list[ dict[ str, Any ] ]:
 
     return changes
 
-def loads( input: str )-> list[ dict[ str, Any ] ]:
+def loads( s: str )-> list[ dict[ str, Any ] ]:
     """
     Parse data from a changelog provided as a string
 
     :param input: the string parse as a changelog
     :return: a list of dictionaries with changelog data (see README.md for structure)
     """
-    return load( StringIO( input ) )
+    return load( StringIO( s ) )
 
 default_header = """
 # Changelog
@@ -230,6 +230,8 @@ def dump(   obj: list[ dict[ str, Any ] ],
     :param header: head text to add before changelog data
     :param encoding: if the stream expects binary data, decode string data with this encoding
     """
+    if not isinstance( obj, list ) or any( not isinstance( i, dict ) for i in obj ):
+        raise ValueError( f'"obj" parameter must be a list of dictionaries' )
     encode = lambda i : i if isinstance( fp, TextIOBase ) else i.encode( encoding )
     fp.writelines( encode( header + "\n" ).splitlines( keepends = True ) )
     for change in obj:

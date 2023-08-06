@@ -120,5 +120,14 @@ def test_save_yanked_version():
     expected = changelog.default_header + "\n\n## [Unreleased] [YANKED]\n"
     assert changelog.dumps( [ { "version": "Unreleased", "yanked": True } ] ) == expected
 
+def test_bad_output():
+    try:
+        changelog.dumps( "asdf" )
+    except Exception as e:
+        assert isinstance( e, ValueError )
+        assert str( e ) == '"obj" parameter must be a list of dictionaries'
+    else:
+        pytest.fail( "Dumping a string to a string was successful" )
+
 def test_dir():
     assert "__version__" in changelog.__dir__()
