@@ -16,30 +16,23 @@ jobs:
       ! github.event.pull_request.draft
     steps:
     # Gather Pull Request Change Information
-    - id: changelog-change-check
+    - id: change-check
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
-      run: |-
-        if { gh pr diff \
-            --repo ${{ github.event.pull_request.base.repo.full_name }} \
-            --name-only ${{ github.event.pull_request.number }} \
-          | grep -E '^CHANGELOG.md$'; }
-        then echo "changed=true" >> "$GITHUB_OUTPUT"
-        else echo "changed=false" >> "$GITHUB_OUTPUT"
-        fi
-    - id: source-change-check
-      shell: bash
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |-
-        if { gh pr diff \
-            --repo ${{ github.event.pull_request.base.repo.full_name }} \
-            --name-only ${{ github.event.pull_request.number }} \
-          | grep -E '^src/|^pyproject.toml$|^LICENSE$|^README.md$'; }
-        then echo "changed=true" >> "$GITHUB_OUTPUT"
-        else echo "changed=false" >> "$GITHUB_OUTPUT"
-        fi
+      run: >-
+        gh --repo ${{ github.event.pull_request.base.repo.full_name }}
+        pr view --json files --jq '
+          .files | map( .path ) |
+          "changelog-changed=\( any( . == "CHANGELOG.md" ) )",
+          "source-changed=\( any(
+               . == "LICENSE"
+            or . == "README.md"
+            or . == "pyproject.toml"
+            or startswith( "src/" )
+          ) )"
+        ' ${{ github.event.pull_request.number }}
+        >> "$GITHUB_OUTPUT"
 
     # Checkout Applicable Source Code
     - uses: actions/checkout@v3
@@ -62,8 +55,8 @@ jobs:
       run: pip install ./head
     - shell: python
       env:
-        SOURCE_CHANGED: ${{ steps.source-change-check.outputs.changed }}
-        CHANGELOG_CHANGED: ${{ steps.changelog-change-check.outputs.changed }}
+        SOURCE_CHANGED: ${{ steps.change-check.outputs.source-changed }}
+        CHANGELOG_CHANGED: ${{ steps.change-check.outputs.changelog-changed }}
       run: |-
         import changelog, semver, sys, os
         from typing import Sequence
@@ -145,7 +138,8 @@ jobs:
             )
 
           if base_changes:
-            if (  [ change[ "version" ] for change in head_changes[ 1 : ] ]
+            to_check = head_changes[ 1 if os.environ[ "SOURCE_CHANGED" ] == 'true' else 0 : ]
+            if (  [ change[ "version" ] for change in to_check ]
                 != [ change[ "version" ] for change in base_changes ]
               ):
               error(

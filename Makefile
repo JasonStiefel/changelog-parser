@@ -6,6 +6,10 @@ help: ## Displays helptext for useful targets in this makefile
 	sort | \
 	awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-8s\033[0m %s\n", $$1, $$2}'
 
+.PHONY: clean
+clean:
+	bash -O extglob -c 'git clean -fX !(venv)'
+
 $(VENV_LOCATION):
 	$(if $(filter 0,$(shell python3 --version >/dev/null 2>&1; echo $$?)),$\
 		python3 -m venv --clear $@,$\
