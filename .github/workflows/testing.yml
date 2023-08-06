@@ -31,7 +31,8 @@ jobs:
       shell: bash
       run: >-
         pylint src --msg-template
-        '::{category} title=pylint,file={path},line={line},lineEnd={end_line},col={column},endColumn={end_column}::[{msg_id}] {msg}\n(code: {symbol})'
+        '::{category} title=pylint,file={path},line={line},lineEnd={end_line},col={column},endColumn={end_column}::[{msg_id}] {msg}
+        ({symbol})'
         | sed -r '/^::(error|warning)/! s/^::(\S+) title=pylint/::notice title=pylint - \1/g'
         | tee >(sed -rn 's/^Your code has been rated at (\S+).*$/score=\1/p' >> "$GITHUB_OUTPUT")
     - id: pylint-badge
