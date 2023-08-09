@@ -127,7 +127,7 @@ jobs:
             if head_changes[ 0 ][ "version" ] not in incremented:
               error(
                 f'Latest "CHANGELOG.md" version, "{ head_changes[ 0 ][ "version" ] }", is not a major, minor,'
-                  ' or patch incrementation of the previous version, "{ head_changes[ ` ][ "version" ] }"',
+                  ' or patch incrementation of the previous version, "{ head_changes[ 0 ][ "version" ] }"',
                 title = '"CHANGELOG.md" Version Not Incremented'
               )
 

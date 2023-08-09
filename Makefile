@@ -8,7 +8,7 @@ help: ## Displays helptext for useful targets in this makefile
 
 .PHONY: clean
 clean:
-	bash -O extglob -c 'git clean -fX !(venv)'
+	bash -O extglob -c 'git clean -fX !(venv) .[!.]* ..?*'
 
 $(VENV_LOCATION):
 	$(if $(filter 0,$(shell python3 --version >/dev/null 2>&1; echo $$?)),$\
