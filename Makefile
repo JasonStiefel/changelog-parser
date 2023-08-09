@@ -1,14 +1,14 @@
 VENV_LOCATION ?= venv
 
 .PHONY: help
-help: ## Displays helptext for useful targets in this makefile
+help: ## displays helptext for useful targets in this makefile
 	@grep -E '^[\*\/\%a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 	sort | \
 	awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-8s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: clean
-clean:
-	bash -O extglob -c 'git clean -fX !(venv)'
+clean: ## remove .gitignore paths (excluding venv directory)
+	bash -O extglob -c 'git clean -fX !($(VENV_LOCATION)) .[!.]* ..?*'
 
 $(VENV_LOCATION):
 	$(if $(filter 0,$(shell python3 --version >/dev/null 2>&1; echo $$?)),$\
