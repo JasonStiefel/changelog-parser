@@ -64,3 +64,29 @@ Yet another python changelog parser.
      }
    }
    ```
+* Dumps data, structured like that above, to a [`CHANGELOG.md` file](https://keepachangelog.com) using code like
+   ```python
+   import changelog
+   import semver
+   from datetime import date
+
+   with open( "CHANGELOG.md", 'rb' ) as fp:
+     changes = changelog.load( fp )
+
+   changes.insert( 0, {
+      "version": semver.Version( major = 0, minor = 0, patch = 6 ),
+      "date": date.today(),
+      "added": [ "`dump` and `dumps` examples" ]
+   } )
+
+   with open( "CHANGELOG.md", 'rb' ) as fp:
+     changelog.dump( changes, fp )
+   ```
+   or
+   ```python
+   import changelog
+   ...
+   changelog_contents = changelog.dumps( changes )
+   with open( "CHANGELOG.md", 'r' ) as fp:
+     fp.write( changelog_contents )
+   ```
