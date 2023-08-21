@@ -79,7 +79,7 @@ Yet another python changelog parser.
       "added": [ "`dump` and `dumps` examples" ]
    } )
 
-   with open( "CHANGELOG.md", 'rb' ) as fp:
+   with open( "CHANGELOG.md", 'wb' ) as fp:
      changelog.dump( changes, fp )
    ```
    or
@@ -87,6 +87,6 @@ Yet another python changelog parser.
    import changelog
    ...
    changelog_contents = changelog.dumps( changes )
-   with open( "CHANGELOG.md", 'r' ) as fp:
+   with open( "CHANGELOG.md", 'w' ) as fp:
      fp.write( changelog_contents )
    ```

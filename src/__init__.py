@@ -6,7 +6,7 @@ keepachangelog.com). In Python, the data is managed as a list of
 dictionaries (see README.md for the dictionaries' structure)
 """
 
-__version__ = '0.0.6'
+__version__ = '0.0.7'
 
 import re
 import textwrap
