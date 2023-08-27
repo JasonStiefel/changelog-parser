@@ -6,7 +6,7 @@ keepachangelog.com). In Python, the data is managed as a list of
 dictionaries (see README.md for the dictionaries' structure)
 """
 
-__version__ = '0.0.7'
+__version__ = '0.0.8'
 
 import re
 import textwrap
@@ -244,26 +244,57 @@ def dump(   obj: list[ dict[ str, Any ] ],
     encode = lambda i : i if isinstance( fp, TextIOBase ) else i.encode( encoding )
     fp.writelines( encode( header + "\n" ).splitlines( keepends = True ) )
     for number, change in enumerate( obj, start = 1 ):
+        # Handle "version" part of the change object
         if "version" not in change:
             raise ValueError( f'Changelog entry #{ number } was missing a "version" key' )
-        line = f'## [{ change[ "version" ] }]'
-        if isinstance( change.get( "date" ), date ):
+        version = change[ "version" ]
+        if isinstance( version, str ) and version.lower() == "unreleased":
+            version = version.capitalize()
+        elif not isinstance( version, Version ):
+            raise ValueError(
+                f'The value associated with the "version" key of changelog entry #{ number }, "{ version }", '
+                'was not a semver Version or the string "Unreleased" (ignoring case)'
+            )
+        line = f'## [{ version }]'
+
+        # Handle "date" part of the change object
+        if "date" in change and isinstance( change[ "date" ], date ):
             line += " - " + change[ "date" ].isoformat()
+        elif change.get( "date" ) is not None:
+            raise ValueError(
+                'The value associated with the "date" key of changelog entry '
+                f'#{ number }, "{ change[ "date" ] }", was not a datetime date or None'
+            )
+
+        # Handle "yanked" part of the change object
+        print(type(change.get("yanked")))
+        if not isinstance( change.get( "yanked", False ), bool):
+            raise ValueError(
+                'The value associated with the "yanked" key of changelog entry '
+                f'#{ number }, "{ change[ "yanked" ] }", was not a boolean'
+            )
         if change.get( "yanked", False ):
             line += " [YANKED]"
+
+        # Write the assembled lines
         fp.writelines( ( encode( i ) for i in ( "\n", line + "\n" ) ) )
+
+        # Handle writing the changes
         for key in change.keys():
             if key in ( 'added', 'changed', 'deprecated', 'removed', 'fixed', 'security' ):
                 fp.writelines( ( encode( i ) for i in ( "\n", f'### { key.capitalize() }' + "\n" ) ) )
                 if isinstance( change[ key ], list ):
-                    fp.writelines( ( encode( i ) for i in ( "\n" ) ) )
+                    fp.writelines( ( encode( "\n" ), ) )
                     for item in change[ key ]:
                         fp.writelines( ( encode( "-" + textwrap.indent( item, "  " )[ 1 : ] + "\n" ), ) )
     if any( "compare_url" in change for change in obj ):
         fp.writelines( ( encode( i ) for i in ( "\n" ) ) )
     for change in obj:
         if "compare_url" in change:
-            fp.writelines( ( encode( f'[{ change[ "version" ] }]: { change[ "compare_url" ] }\n' ), ) )
+            version = change[ "version" ]
+            if isinstance( version, str ) and version.lower() == "unreleased":
+                version = version.lower()
+            fp.writelines( ( encode( f'[{ version }]: { change[ "compare_url" ] }\n' ), ) )
 
 def dumps( obj: list[ dict[ str, Any ] ], header: str = DEFAULT_HEADER )-> str:
     """

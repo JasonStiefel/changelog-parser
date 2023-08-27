@@ -42,12 +42,7 @@ def test_write( project_example_changelog_path ):
             for line in differ.compare( w_fp.readlines(), r_fp.readlines() ):
                 if not line.startswith( "  " ):
                     diffs.append( line )
-            assert diffs == [
-                '- [Unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v1.1.1...HEAD\n',
-                '?  ^\n',
-                '+ [unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v1.1.1...HEAD\n',
-                '?  ^\n'
-            ]
+            assert not diffs
     finally:
         os.remove( path )
 
@@ -124,7 +119,13 @@ def test_save_yanked_version():
     ( "changelog_object", "error_message" ),
     [
         ( "asdf", '"obj" parameter must be a list of dictionaries' ),
-        ( [{}], 'Changelog entry #1 was missing a "version" key' )
+        ( [{}], 'Changelog entry #1 was missing a "version" key' ),
+        ( [{ "version": 5 }], 'The value associated with the "version" key of changelog entry #1, "5", '
+            'was not a semver Version or the string "Unreleased" (ignoring case)' ),
+        ( [{ "version": "Unreleased", "date": 5 }], 'The value associated with the "date" key of '
+            'changelog entry #1, "5", was not a datetime date or None' ),
+        ( [{ "version": "Unreleased", "date": date.today(), "yanked": 5 }], 'The value associated '
+            'with the "yanked" key of changelog entry #1, "5", was not a boolean' )
     ] )
 def test_bad_output( changelog_object, error_message ):
     try:
