@@ -265,7 +265,7 @@ def dump(   obj: list[ dict[ str, Any ] ],
                 'The value associated with the "date" key of changelog entry '
                 f'#{ number }, "{ change[ "date" ] }", was not a datetime date or None'
             )
-        
+
         # Handle "yanked" part of the change object
         print(type(change.get("yanked")))
         if not isinstance( change.get( "yanked", False ), bool):
@@ -275,7 +275,7 @@ def dump(   obj: list[ dict[ str, Any ] ],
             )
         if change.get( "yanked", False ):
             line += " [YANKED]"
-        
+
         # Write the assembled lines
         fp.writelines( ( encode( i ) for i in ( "\n", line + "\n" ) ) )
 
