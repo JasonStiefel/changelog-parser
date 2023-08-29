@@ -65,7 +65,7 @@ jobs:
       run: >-
         gh pr view --repo ${{ github.event.pull_request.base.repo.full_name }}
         --json comments --jq '.comments |
-          map( select( .body | startswith( "<!-- PyLint Comment: Unit Testing -->" ) ) ) |
+          map( select( .body | startswith( "<!-- PyLint Comment: ${{ github.workflow }} -->" ) ) ) |
           "comment-id=\( .[ -1 ].url // "" | split( "#issuecomment-" )[ 1 ] // ""  )"
         ' ${{ github.event.pull_request.number }} >> "$GITHUB_OUTPUT"
     - uses: peter-evans/create-or-update-comment@v3
