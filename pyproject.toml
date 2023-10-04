@@ -28,7 +28,7 @@ urls.changelog = "https://github.com/JasonStiefel/changelog-parser/blob/main/CHA
 dynamic = [ "version" ]
 
 dependencies = [
-  "semver"
+  "semver==3.0.1"
 ]
 
 [tool.setuptools.dynamic]

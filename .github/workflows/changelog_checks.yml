@@ -121,7 +121,7 @@ jobs:
               title = 'Version Mismatch'
             )
           
-          if os.environ[ "SOURCE_CHANGED" ] == 'true' and 1 < len( head_changes ):
+          if os.environ[ "SOURCE_CHANGED" ] == 'true' and head_changes and base_changes:
             last_version = head_changes[ 1 ][ "version" ]
             incremented = ( last_version.bump_major(), last_version.bump_minor(), last_version.bump_patch() )
             if head_changes[ 0 ][ "version" ] not in incremented:
